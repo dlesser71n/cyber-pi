@@ -6,7 +6,7 @@ Prevents injection attacks, XSS, and malformed requests
 from typing import Any, Optional, List
 from fastapi import HTTPException, status
 import re
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class InputValidator:
@@ -187,20 +187,23 @@ class ValidatedThreatQuery(BaseModel):
     """Validated threat query model"""
     query: str = Field(..., min_length=1, max_length=500)
     industry: Optional[str] = Field(None, max_length=50)
-    severity: Optional[List[str]] = Field(None, max_items=5)
+    severity: Optional[List[str]] = Field(None, max_length=5)
     limit: int = Field(10, ge=1, le=100)
 
-    @validator('query')
+    @field_validator('query')
+    @classmethod
     def validate_query(cls, v):
         return InputValidator.validate_search_query(v)
 
-    @validator('industry')
+    @field_validator('industry')
+    @classmethod
     def validate_industry(cls, v):
         if v:
             return InputValidator.sanitize_string(v, 50, "industry")
         return v
 
-    @validator('severity')
+    @field_validator('severity')
+    @classmethod
     def validate_severity_list(cls, v):
         if v:
             return [InputValidator.validate_severity(s) for s in v]
@@ -209,10 +212,11 @@ class ValidatedThreatQuery(BaseModel):
 
 class ValidatedCollectionRequest(BaseModel):
     """Validated collection request model"""
-    sources: List[str] = Field(default=["technical", "social", "ot_ics", "dark_web"], max_items=10)
+    sources: List[str] = Field(default=["technical", "social", "ot_ics", "dark_web"], max_length=10)
     industry: Optional[str] = Field(None, max_length=50)
 
-    @validator('sources')
+    @field_validator('sources')
+    @classmethod
     def validate_sources(cls, v):
         valid_sources = ['technical', 'social', 'ot_ics', 'dark_web', 'geopolitical', 'newsletters']
         for source in v:
@@ -220,7 +224,8 @@ class ValidatedCollectionRequest(BaseModel):
                 raise ValueError(f"Invalid source: {source}. Must be one of: {', '.join(valid_sources)}")
         return v
 
-    @validator('industry')
+    @field_validator('industry')
+    @classmethod
     def validate_industry(cls, v):
         if v:
             return InputValidator.sanitize_string(v, 50, "industry")
@@ -231,7 +236,8 @@ class ValidatedActorName(BaseModel):
     """Validated threat actor name"""
     actor_name: str = Field(..., min_length=1, max_length=100)
 
-    @validator('actor_name')
+    @field_validator('actor_name')
+    @classmethod
     def validate_actor(cls, v):
         return InputValidator.sanitize_neo4j_parameter(v, 100)
 
@@ -240,7 +246,8 @@ class ValidatedLimit(BaseModel):
     """Validated limit parameter"""
     limit: int = Field(default=20, ge=1, le=1000)
 
-    @validator('limit')
+    @field_validator('limit')
+    @classmethod
     def validate_limit(cls, v):
         return InputValidator.validate_integer_range(v, 1, 1000, "limit")
 
