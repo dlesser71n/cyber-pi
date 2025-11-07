@@ -1,0 +1,221 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: github-advisories-collector
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: collector
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet aiohttp redis
+            cat > /tmp/collector.py << 'EOF'
+            import asyncio
+            import aiohttp
+            import redis.asyncio as redis
+            from datetime import datetime
+            import json
+
+            async def collect_github_advisories():
+                print("=" * 60)
+                print("🔒 GITHUB SECURITY ADVISORIES COLLECTOR")
+                print("=" * 60)
+                
+                # Connect to Redis
+                redis_client = redis.Redis(
+                    host='redis.cyber-pi.svc.cluster.local',
+                    port=6379,
+                    password='cyber-pi-redis-2025',
+                    decode_responses=True
+                )
+                
+                try:
+                    await redis_client.ping()
+                    print("✅ Connected to Redis")
+                except Exception as e:
+                    print(f"❌ Redis connection failed: {e}")
+                    return
+                
+                # GitHub GraphQL API
+                url = "https://api.github.com/graphql"
+                
+                query = """
+                query {
+                  securityVulnerabilities(first: 100, ecosystem: PIP, orderBy: {field: UPDATED_AT, direction: DESC}) {
+                    nodes {
+                      advisory {
+                        ghsaId
+                        summary
+                        description
+                        severity
+                        publishedAt
+                        updatedAt
+                        withdrawnAt
+                        references {
+                          url
+                        }
+                        identifiers {
+                          type
+                          value
+                        }
+                      }
+                      package {
+                        name
+                        ecosystem
+                      }
+                      vulnerableVersionRange
+                      firstPatchedVersion {
+                        identifier
+                      }
+                    }
+                  }
+                }
+                """
+                
+                headers = {
+                    "Content-Type": "application/json",
+                    "User-Agent": "Cyber-PI-Collector"
+                }
+                
+                async with aiohttp.ClientSession() as session:
+                    try:
+                        print(f"\n📡 Fetching GitHub Security Advisories...")
+                        
+                        # Note: GitHub API requires authentication for higher rate limits
+                        # For now, using unauthenticated requests (60 req/hour limit)
+                        
+                        async with session.post(
+                            url,
+                            json={"query": query},
+                            headers=headers,
+                            timeout=aiohttp.ClientTimeout(total=30)
+                        ) as response:
+                            if response.status == 200:
+                                data = await response.json()
+                                
+                                if 'errors' in data:
+                                    print(f"❌ GraphQL errors: {data['errors']}")
+                                    # Fall back to REST API
+                                    print("\n📡 Falling back to REST API...")
+                                    await collect_via_rest_api(session, redis_client)
+                                    return
+                                
+                                vulnerabilities = data.get('data', {}).get('securityVulnerabilities', {}).get('nodes', [])
+                                
+                                print(f"✅ Retrieved {len(vulnerabilities)} advisories")
+                                
+                                # Store in Redis
+                                count = 0
+                                for vuln in vulnerabilities:
+                                    advisory = vuln.get('advisory', {})
+                                    ghsa_id = advisory.get('ghsaId')
+                                    
+                                    if ghsa_id:
+                                        key = f"github:advisory:{ghsa_id}"
+                                        
+                                        # Get CVE ID if available
+                                        cve_id = None
+                                        for identifier in advisory.get('identifiers', []):
+                                            if identifier.get('type') == 'CVE':
+                                                cve_id = identifier.get('value')
+                                                break
+                                        
+                                        await redis_client.hset(key, mapping={
+                                            'ghsa_id': ghsa_id,
+                                            'cve_id': cve_id or '',
+                                            'summary': advisory.get('summary', ''),
+                                            'description': advisory.get('description', '')[:500],  # Truncate
+                                            'severity': advisory.get('severity', ''),
+                                            'package': vuln.get('package', {}).get('name', ''),
+                                            'ecosystem': vuln.get('package', {}).get('ecosystem', ''),
+                                            'vulnerable_range': vuln.get('vulnerableVersionRange', ''),
+                                            'patched_version': vuln.get('firstPatchedVersion', {}).get('identifier', '') if vuln.get('firstPatchedVersion') else '',
+                                            'published_at': advisory.get('publishedAt', ''),
+                                            'updated_at': advisory.get('updatedAt', ''),
+                                            'collected_at': datetime.utcnow().isoformat()
+                                        })
+                                        count += 1
+                                
+                                # Store metadata
+                                await redis_client.set('github:advisories:last_updated', datetime.utcnow().isoformat())
+                                await redis_client.set('github:advisories:total_count', count)
+                                
+                                print(f"✅ Stored {count} advisories in Redis")
+                                print(f"\n📊 Summary:")
+                                print(f"   Total Advisories: {count}")
+                                print(f"   Last Updated: {datetime.utcnow().isoformat()}")
+                                
+                            else:
+                                print(f"❌ HTTP {response.status}: Failed to fetch advisories")
+                                print(f"   Response: {await response.text()}")
+                    
+                    except Exception as e:
+                        print(f"❌ Error fetching data: {e}")
+                
+                await redis_client.aclose()
+                print("\n✅ Collection complete!")
+
+            async def collect_via_rest_api(session, redis_client):
+                """Fallback to REST API for public advisories"""
+                url = "https://api.github.com/advisories"
+                params = {
+                    "per_page": 100,
+                    "sort": "updated",
+                    "direction": "desc"
+                }
+                
+                headers = {
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": "Cyber-PI-Collector"
+                }
+                
+                try:
+                    async with session.get(url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                        if response.status == 200:
+                            advisories = await response.json()
+                            print(f"✅ Retrieved {len(advisories)} advisories via REST API")
+                            
+                            count = 0
+                            for advisory in advisories:
+                                ghsa_id = advisory.get('ghsa_id')
+                                if ghsa_id:
+                                    key = f"github:advisory:{ghsa_id}"
+                                    
+                                    await redis_client.hset(key, mapping={
+                                        'ghsa_id': ghsa_id,
+                                        'cve_id': advisory.get('cve_id', ''),
+                                        'summary': advisory.get('summary', ''),
+                                        'description': advisory.get('description', '')[:500],
+                                        'severity': advisory.get('severity', ''),
+                                        'published_at': advisory.get('published_at', ''),
+                                        'updated_at': advisory.get('updated_at', ''),
+                                        'collected_at': datetime.utcnow().isoformat()
+                                    })
+                                    count += 1
+                            
+                            await redis_client.set('github:advisories:last_updated', datetime.utcnow().isoformat())
+                            await redis_client.set('github:advisories:total_count', count)
+                            
+                            print(f"✅ Stored {count} advisories in Redis")
+                            print(f"\n📊 Summary:")
+                            print(f"   Total Advisories: {count}")
+                            print(f"   Last Updated: {datetime.utcnow().isoformat()}")
+                        else:
+                            print(f"❌ REST API HTTP {response.status}")
+                except Exception as e:
+                    print(f"❌ REST API error: {e}")
+
+            if __name__ == "__main__":
+                asyncio.run(collect_github_advisories())
+            EOF
+            
+            python /tmp/collector.py
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+      restartPolicy: Never
+  backoffLimit: 3

@@ -1,0 +1,205 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ransomware-monitor
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: hunter
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis
+            cat > /tmp/hunter.py << 'EOF'
+            import redis
+            from datetime import datetime
+            from collections import defaultdict
+
+            def monitor_ransomware():
+                print("=" * 80)
+                print("🔐 RANSOMWARE THREAT MONITOR")
+                print("=" * 80)
+                
+                r = redis.Redis(
+                    host='redis.cyber-pi.svc.cluster.local',
+                    port=6379,
+                    password='cyber-pi-redis-2025',
+                    decode_responses=True
+                )
+                
+                try:
+                    r.ping()
+                    print("✅ Connected to Redis\n")
+                except Exception as e:
+                    print(f"❌ Redis connection failed: {e}")
+                    return
+                
+                # Ransomware indicators
+                ransomware_keywords = [
+                    'ransomware', 'lockbit', 'blackcat', 'alphv', 'conti',
+                    'revil', 'ryuk', 'maze', 'sodinokibi', 'darkside',
+                    'file encryption', 'crypto', 'ransom', 'extortion'
+                ]
+                
+                # Common ransomware attack vectors
+                attack_vectors = {
+                    'rce': ['remote code execution', 'rce', 'code execution'],
+                    'auth_bypass': ['authentication bypass', 'auth bypass', 'unauthorized access'],
+                    'file_upload': ['file upload', 'arbitrary file', 'upload vulnerability'],
+                    'sql_injection': ['sql injection', 'sqli'],
+                    'deserialization': ['deserialization', 'unsafe deserialization'],
+                    'path_traversal': ['path traversal', 'directory traversal']
+                }
+                
+                # High-risk products for ransomware
+                high_risk_products = [
+                    'VPN', 'Remote Desktop', 'RDP', 'Exchange', 'SharePoint',
+                    'Backup', 'Storage', 'NAS', 'File Server', 'Gateway'
+                ]
+                
+                print("🔍 Analyzing KEVs for ransomware indicators...\n")
+                
+                kev_keys = r.keys('cisa:kev:CVE-*')
+                
+                ransomware_risks = []
+                vector_distribution = defaultdict(int)
+                vendor_risks = defaultdict(int)
+                
+                for key in kev_keys:
+                    vuln = r.hgetall(key)
+                    cve_id = vuln.get('cve_id', '')
+                    vendor = vuln.get('vendor', '')
+                    product = vuln.get('product', '')
+                    vuln_name = vuln.get('vulnerability', '').lower()
+                    description = vuln.get('short_description', '').lower()
+                    
+                    risk_score = 0
+                    indicators = []
+                    vectors = []
+                    
+                    # Check for ransomware keywords
+                    for keyword in ransomware_keywords:
+                        if keyword in vuln_name or keyword in description:
+                            risk_score += 3
+                            indicators.append(f"Ransomware keyword: {keyword}")
+                    
+                    # Check attack vectors
+                    for vector_name, vector_keywords in attack_vectors.items():
+                        for keyword in vector_keywords:
+                            if keyword in vuln_name or keyword in description:
+                                risk_score += 2
+                                vectors.append(vector_name)
+                                vector_distribution[vector_name] += 1
+                                break
+                    
+                    # Check high-risk products
+                    for risk_prod in high_risk_products:
+                        if risk_prod.lower() in product.lower():
+                            risk_score += 2
+                            indicators.append(f"High-risk product: {risk_prod}")
+                    
+                    # RCE is critical for ransomware
+                    if 'remote code execution' in vuln_name:
+                        risk_score += 3
+                        indicators.append("RCE - Critical for ransomware deployment")
+                    
+                    # Authentication bypass enables initial access
+                    if 'authentication' in vuln_name and 'bypass' in vuln_name:
+                        risk_score += 2
+                        indicators.append("Auth bypass - Initial access vector")
+                    
+                    if risk_score >= 3:
+                        ransomware_risks.append({
+                            'cve': cve_id,
+                            'vendor': vendor,
+                            'product': product,
+                            'vulnerability': vuln.get('vulnerability', ''),
+                            'score': risk_score,
+                            'indicators': indicators,
+                            'vectors': list(set(vectors)),
+                            'date_added': vuln.get('date_added', ''),
+                            'due_date': vuln.get('due_date', '')
+                        })
+                        
+                        vendor_risks[vendor] += 1
+                
+                # Sort by risk score
+                ransomware_risks.sort(key=lambda x: x['score'], reverse=True)
+                
+                print(f"🚨 RANSOMWARE ATTACK RISKS: {len(ransomware_risks)}")
+                print("=" * 80)
+                
+                for i, risk in enumerate(ransomware_risks[:15], 1):
+                    if risk['score'] >= 7:
+                        risk_level = "🔴 CRITICAL"
+                    elif risk['score'] >= 5:
+                        risk_level = "🟠 HIGH"
+                    else:
+                        risk_level = "🟡 MEDIUM"
+                    
+                    print(f"\n{i}. {risk_level} - Risk Score: {risk['score']}")
+                    print(f"   CVE: {risk['cve']}")
+                    print(f"   Vendor: {risk['vendor']} | Product: {risk['product']}")
+                    print(f"   Vulnerability: {risk['vulnerability'][:70]}...")
+                    if risk['vectors']:
+                        print(f"   Attack Vectors: {', '.join(risk['vectors'])}")
+                    if risk['due_date']:
+                        print(f"   ⏰ Due Date: {risk['due_date']}")
+                
+                print(f"\n\n🎯 ATTACK VECTOR DISTRIBUTION:")
+                print("=" * 80)
+                for vector, count in sorted(vector_distribution.items(), 
+                                           key=lambda x: x[1], reverse=True):
+                    bar = "█" * min(count // 2, 40)
+                    print(f"  {vector:20} {count:4} {bar}")
+                
+                print(f"\n\n🎯 HIGH-RISK VENDORS (Top 10):")
+                print("=" * 80)
+                for vendor, count in sorted(vendor_risks.items(), 
+                                           key=lambda x: x[1], reverse=True)[:10]:
+                    print(f"  {vendor:30} {count:3} ransomware-related CVEs")
+                
+                # Recent ransomware risks (last 30 days)
+                recent_risks = [r for r in ransomware_risks 
+                               if r.get('date_added', '') >= '2025-10-08']
+                
+                if recent_risks:
+                    print(f"\n\n⚠️  RECENT RANSOMWARE RISKS (Last 30 days): {len(recent_risks)}")
+                    print("=" * 80)
+                    for risk in recent_risks[:5]:
+                        print(f"  {risk['cve']:20} {risk['vendor']:15} (Added: {risk['date_added']})")
+                        print(f"    {risk['vulnerability'][:70]}...")
+                
+                # Summary
+                print("\n" + "=" * 80)
+                print("📊 RANSOMWARE MONITORING SUMMARY")
+                print("=" * 80)
+                print(f"  Total KEVs Analyzed: {len(kev_keys)}")
+                print(f"  Ransomware Risks Identified: {len(ransomware_risks)}")
+                print(f"  Critical (Score ≥7): {len([r for r in ransomware_risks if r['score'] >= 7])}")
+                print(f"  High (Score 5-6): {len([r for r in ransomware_risks if 5 <= r['score'] < 7])}")
+                print(f"  Medium (Score 3-4): {len([r for r in ransomware_risks if 3 <= r['score'] < 5])}")
+                print(f"  Most Common Vector: {max(vector_distribution.items(), key=lambda x: x[1])[0] if vector_distribution else 'N/A'}")
+                print(f"  Recent Risks (30d): {len(recent_risks)}")
+                print("=" * 80)
+                
+                # Store results
+                r.set('threat:ransomware:last_scan', datetime.utcnow().isoformat())
+                r.set('threat:ransomware:risks_count', len(ransomware_risks))
+                r.set('threat:ransomware:critical_count', len([r for r in ransomware_risks if r['score'] >= 7]))
+                
+                print("\n✅ Ransomware monitoring complete!")
+
+            if __name__ == "__main__":
+                monitor_ransomware()
+            EOF
+            
+            python /tmp/hunter.py
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+      restartPolicy: Never
+  backoffLimit: 1

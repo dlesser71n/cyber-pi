@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""
+Executive Report Generator
+Collects threat intelligence data and generates comprehensive executive reports using LLM
+"""
+
+import asyncio
+import aiohttp
+import redis
+import json
+from datetime import datetime
+from collections import defaultdict
+
+
+async def generate_executive_report():
+    print("=" * 80)
+    print("📊 EXECUTIVE REPORT GENERATOR")
+    print("=" * 80)
+    
+    # Connect to Redis
+    r = redis.Redis(
+        host='redis.cyber-pi.svc.cluster.local',
+        port=6379,
+        password='cyber-pi-redis-2025',
+        decode_responses=True
+    )
+    
+    try:
+        r.ping()
+        print("✅ Connected to Redis")
+    except Exception as e:
+        print(f"❌ Redis connection failed: {e}")
+        return
+    
+    # Collect all threat intelligence data
+    print("\n📥 Collecting threat intelligence data...")
+    
+    kev_keys = r.keys('cisa:kev:CVE-*')
+    print(f"   - {len(kev_keys)} CISA KEVs")
+    
+    # Aggregate statistics
+    vendors = defaultdict(int)
+    products = defaultdict(int)
+    recent_kevs = []
+    urgent_deadlines = []
+    critical_actions = []
+    
+    today = datetime.utcnow().date()
+    
+    for key in kev_keys:
+        vuln = r.hgetall(key)
+        vendor = vuln.get('vendor', 'Unknown')
+        product = vuln.get('product', 'Unknown')
+        vendors[vendor] += 1
+        products[product] += 1
+        
+        # Recent KEVs
+        date_added_str = vuln.get('date_added', '')
+        if date_added_str:
+            try:
+                date_added = datetime.strptime(date_added_str, '%Y-%m-%d').date()
+                days_ago = (today - date_added).days
+                if days_ago <= 30:
+                    recent_kevs.append({
+                        'cve': vuln.get('cve_id'),
+                        'vendor': vendor,
+                        'product': product,
+                        'vuln': vuln.get('vulnerability', ''),
+                        'days_ago': days_ago
+                    })
+            except:
+                pass
+        
+        # Urgent deadlines
+        due_date_str = vuln.get('due_date', '')
+        if due_date_str:
+            try:
+                due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+                days_until = (due_date - today).days
+                if 0 <= days_until <= 30:
+                    urgent_deadlines.append({
+                        'cve': vuln.get('cve_id'),
+                        'vendor': vendor,
+                        'product': product,
+                        'days_until': days_until,
+                        'due_date': due_date_str
+                    })
+            except:
+                pass
+        
+        # Critical actions
+        action = vuln.get('required_action', '')
+        if 'discontinue' in action.lower() or 'immediately' in action.lower():
+            critical_actions.append({
+                'cve': vuln.get('cve_id'),
+                'vendor': vendor,
+                'action': action[:100]
+            })
+    
+    # Get threat hunting results
+    apt_count = r.get('threat:apt:suspects_count') or '0'
+    apt_critical = r.get('threat:apt:critical_count') or '0'
+    ransomware_count = r.get('threat:ransomware:risks_count') or '0'
+    ransomware_critical = r.get('threat:ransomware:critical_count') or '0'
+    
+    # Prepare data for LLM
+    threat_data = {
+        'total_kevs': len(kev_keys),
+        'collection_date': datetime.utcnow().isoformat(),
+        'top_vendors': sorted(vendors.items(), key=lambda x: x[1], reverse=True)[:10],
+        'recent_kevs_count': len(recent_kevs),
+        'recent_kevs_sample': recent_kevs[:10],
+        'urgent_deadlines_count': len(urgent_deadlines),
+        'urgent_deadlines': sorted(urgent_deadlines, key=lambda x: x['days_until'])[:10],
+        'critical_actions_count': len(critical_actions),
+        'apt_suspects': int(apt_count),
+        'apt_critical': int(apt_critical),
+        'ransomware_risks': int(ransomware_count),
+        'ransomware_critical': int(ransomware_critical)
+    }
+    
+    print(f"\n📊 Data Summary:")
+    print(f"   - Total KEVs: {threat_data['total_kevs']}")
+    print(f"   - Recent additions (30d): {threat_data['recent_kevs_count']}")
+    print(f"   - Urgent deadlines: {threat_data['urgent_deadlines_count']}")
+    print(f"   - Critical actions: {threat_data['critical_actions_count']}")
+    print(f"   - APT suspects: {threat_data['apt_suspects']}")
+    print(f"   - Ransomware risks: {threat_data['ransomware_risks']}")
+    
+    # Build vendor list
+    vendor_list = "\n".join([f"{i+1}. {vendor}: {count} vulnerabilities" 
+                             for i, (vendor, count) in enumerate(threat_data['top_vendors'])])
+    
+    # Build urgent deadlines list
+    deadlines_list = "\n".join([f"- {d['cve']} ({d['vendor']}) - Due in {d['days_until']} days ({d['due_date']})" 
+                                for d in threat_data['urgent_deadlines'][:5]])
+    
+    # Build recent activity list
+    recent_list = "\n".join([f"- {k['cve']} ({k['vendor']} {k['product']}) - Added {k['days_ago']} days ago" 
+                            for k in threat_data['recent_kevs_sample'][:5]])
+    
+    # Generate prompt for LLM
+    prompt = f"""You are a cybersecurity analyst generating an executive threat intelligence report.
+
+THREAT INTELLIGENCE DATA:
+- Total Known Exploited Vulnerabilities: {threat_data['total_kevs']}
+- Collection Date: {threat_data['collection_date']}
+- Recent Additions (30 days): {threat_data['recent_kevs_count']}
+- Urgent Remediation Deadlines: {threat_data['urgent_deadlines_count']}
+- Critical Actions Required: {threat_data['critical_actions_count']}
+- APT Suspects Identified: {threat_data['apt_suspects']} ({threat_data['apt_critical']} critical)
+- Ransomware Risks: {threat_data['ransomware_risks']} ({threat_data['ransomware_critical']} critical)
+
+TOP 10 AFFECTED VENDORS:
+{vendor_list}
+
+URGENT DEADLINES (Next 30 Days):
+{deadlines_list}
+
+RECENT THREAT ACTIVITY (Last 30 Days):
+{recent_list}
+
+Generate a comprehensive executive report with the following sections:
+1. EXECUTIVE SUMMARY (2-3 paragraphs, business impact focus)
+2. KEY FINDINGS (bullet points, quantified risks)
+3. CRITICAL THREATS (top 5 most urgent)
+4. IMMEDIATE ACTIONS REQUIRED (next 7-30 days)
+5. STRATEGIC RECOMMENDATIONS (long-term)
+6. RISK ASSESSMENT (financial and operational impact)
+
+Use professional business language. Focus on actionable intelligence and business risk, not technical details.
+Format in Markdown. Be concise but comprehensive."""
+
+    print(f"\n🤖 Sending request to Ollama...")
+    print(f"   Model: llama3.1:8b")
+    print(f"   Prompt length: {len(prompt)} characters")
+    
+    # Call Ollama
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.post(
+                'http://ollama.cyber-pi.svc.cluster.local:11434/api/generate',
+                json={
+                    'model': 'llama3.1:8b',
+                    'prompt': prompt,
+                    'stream': False,
+                    'options': {
+                        'temperature': 0.3,
+                        'num_predict': 4000
+                    }
+                },
+                timeout=aiohttp.ClientTimeout(total=300)
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    report = data.get('response', '')
+                    
+                    print(f"\n✅ Report generated successfully!")
+                    print(f"   Length: {len(report)} characters")
+                    
+                    # Store report in Redis
+                    report_key = f"report:executive:{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+                    r.set(report_key, report)
+                    r.set('report:executive:latest', report)
+                    r.set('report:executive:latest_key', report_key)
+                    r.set('report:executive:generated_at', datetime.utcnow().isoformat())
+                    
+                    print(f"\n📄 Report stored in Redis:")
+                    print(f"   Key: {report_key}")
+                    print(f"   Latest: report:executive:latest")
+                    
+                    # Print report
+                    print("\n" + "=" * 80)
+                    print("EXECUTIVE THREAT INTELLIGENCE REPORT")
+                    print("=" * 80)
+                    print(report)
+                    print("=" * 80)
+                    
+                else:
+                    print(f"❌ Ollama request failed: HTTP {response.status}")
+                    print(f"   Response: {await response.text()}")
+        
+        except asyncio.TimeoutError:
+            print("❌ Request timed out (300s)")
+        except Exception as e:
+            print(f"❌ Error calling Ollama: {e}")
+    
+    r.close()
+    print("\n✅ Report generation complete!")
+
+
+if __name__ == "__main__":
+    asyncio.run(generate_executive_report())

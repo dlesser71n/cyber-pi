@@ -1,0 +1,195 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: apt-detector
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: hunter
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis
+            cat > /tmp/hunter.py << 'EOF'
+            import redis
+            from datetime import datetime
+            from collections import defaultdict
+            import re
+
+            def detect_apt_patterns():
+                print("=" * 80)
+                print("🕵️  APT (Advanced Persistent Threat) DETECTOR")
+                print("=" * 80)
+                
+                r = redis.Redis(
+                    host='redis.cyber-pi.svc.cluster.local',
+                    port=6379,
+                    password='cyber-pi-redis-2025',
+                    decode_responses=True
+                )
+                
+                try:
+                    r.ping()
+                    print("✅ Connected to Redis\n")
+                except Exception as e:
+                    print(f"❌ Redis connection failed: {e}")
+                    return
+                
+                # APT Indicators - Known patterns
+                apt_keywords = [
+                    'zero-day', 'zero day', 'supply chain', 'nation-state',
+                    'espionage', 'targeted attack', 'advanced persistent',
+                    'apt', 'state-sponsored', 'backdoor', 'trojan',
+                    'remote code execution', 'privilege escalation',
+                    'lateral movement', 'persistence mechanism'
+                ]
+                
+                # High-value targets
+                critical_vendors = ['Microsoft', 'Cisco', 'VMware', 'Fortinet', 
+                                   'Palo Alto', 'Ivanti', 'Citrix', 'SonicWall']
+                
+                critical_products = ['Windows', 'Exchange', 'Active Directory', 
+                                    'VPN', 'Firewall', 'Router', 'Gateway']
+                
+                print("🔍 Analyzing KEVs for APT indicators...\n")
+                
+                kev_keys = r.keys('cisa:kev:CVE-*')
+                
+                apt_suspects = []
+                vendor_targeting = defaultdict(list)
+                product_targeting = defaultdict(list)
+                
+                for key in kev_keys:
+                    vuln = r.hgetall(key)
+                    cve_id = vuln.get('cve_id', '')
+                    vendor = vuln.get('vendor', '')
+                    product = vuln.get('product', '')
+                    vuln_name = vuln.get('vulnerability', '').lower()
+                    description = vuln.get('short_description', '').lower()
+                    
+                    apt_score = 0
+                    indicators = []
+                    
+                    # Check for APT keywords
+                    for keyword in apt_keywords:
+                        if keyword in vuln_name or keyword in description:
+                            apt_score += 1
+                            indicators.append(keyword)
+                    
+                    # Check for critical vendors
+                    if vendor in critical_vendors:
+                        apt_score += 2
+                        indicators.append(f"Critical vendor: {vendor}")
+                    
+                    # Check for critical products
+                    for crit_prod in critical_products:
+                        if crit_prod.lower() in product.lower():
+                            apt_score += 2
+                            indicators.append(f"Critical product: {crit_prod}")
+                    
+                    # Check for RCE (Remote Code Execution)
+                    if 'remote code execution' in vuln_name or 'rce' in vuln_name:
+                        apt_score += 3
+                        indicators.append("RCE capability")
+                    
+                    # Check for privilege escalation
+                    if 'privilege escalation' in vuln_name or 'elevation' in vuln_name:
+                        apt_score += 2
+                        indicators.append("Privilege escalation")
+                    
+                    # High APT likelihood
+                    if apt_score >= 3:
+                        apt_suspects.append({
+                            'cve': cve_id,
+                            'vendor': vendor,
+                            'product': product,
+                            'vulnerability': vuln.get('vulnerability', ''),
+                            'score': apt_score,
+                            'indicators': indicators,
+                            'date_added': vuln.get('date_added', ''),
+                            'due_date': vuln.get('due_date', '')
+                        })
+                        
+                        vendor_targeting[vendor].append(cve_id)
+                        product_targeting[product].append(cve_id)
+                
+                # Sort by APT score
+                apt_suspects.sort(key=lambda x: x['score'], reverse=True)
+                
+                print(f"🚨 HIGH-RISK APT SUSPECTS: {len(apt_suspects)}")
+                print("=" * 80)
+                
+                for i, suspect in enumerate(apt_suspects[:15], 1):
+                    risk_level = "🔴 CRITICAL" if suspect['score'] >= 5 else "🟠 HIGH"
+                    print(f"\n{i}. {risk_level} - APT Score: {suspect['score']}")
+                    print(f"   CVE: {suspect['cve']}")
+                    print(f"   Vendor: {suspect['vendor']} | Product: {suspect['product']}")
+                    print(f"   Vulnerability: {suspect['vulnerability'][:70]}...")
+                    print(f"   Indicators: {', '.join(suspect['indicators'][:3])}")
+                    if suspect['due_date']:
+                        print(f"   ⏰ Due Date: {suspect['due_date']}")
+                
+                print(f"\n\n🎯 TARGETED VENDORS (Top 10):")
+                print("=" * 80)
+                for vendor, cves in sorted(vendor_targeting.items(), 
+                                          key=lambda x: len(x[1]), reverse=True)[:10]:
+                    print(f"  {vendor:30} {len(cves):3} APT-related CVEs")
+                
+                print(f"\n\n🎯 TARGETED PRODUCTS (Top 10):")
+                print("=" * 80)
+                for product, cves in sorted(product_targeting.items(), 
+                                           key=lambda x: len(x[1]), reverse=True)[:10]:
+                    print(f"  {product:30} {len(cves):3} APT-related CVEs")
+                
+                # APT Campaign Detection (multiple CVEs from same vendor in short time)
+                print(f"\n\n🔍 POTENTIAL APT CAMPAIGNS:")
+                print("=" * 80)
+                
+                campaigns = []
+                for vendor, cves in vendor_targeting.items():
+                    if len(cves) >= 3:  # 3+ CVEs = potential campaign
+                        campaigns.append({
+                            'vendor': vendor,
+                            'cve_count': len(cves),
+                            'cves': cves[:5]
+                        })
+                
+                campaigns.sort(key=lambda x: x['cve_count'], reverse=True)
+                
+                for campaign in campaigns[:5]:
+                    print(f"\n  ⚠️  {campaign['vendor']}")
+                    print(f"     {campaign['cve_count']} related vulnerabilities")
+                    print(f"     CVEs: {', '.join(campaign['cves'])}")
+                
+                # Summary
+                print("\n" + "=" * 80)
+                print("📊 APT DETECTION SUMMARY")
+                print("=" * 80)
+                print(f"  Total KEVs Analyzed: {len(kev_keys)}")
+                print(f"  APT Suspects Identified: {len(apt_suspects)}")
+                print(f"  Critical (Score ≥5): {len([s for s in apt_suspects if s['score'] >= 5])}")
+                print(f"  High (Score 3-4): {len([s for s in apt_suspects if 3 <= s['score'] < 5])}")
+                print(f"  Targeted Vendors: {len(vendor_targeting)}")
+                print(f"  Potential Campaigns: {len(campaigns)}")
+                print("=" * 80)
+                
+                # Store results
+                r.set('threat:apt:last_scan', datetime.utcnow().isoformat())
+                r.set('threat:apt:suspects_count', len(apt_suspects))
+                r.set('threat:apt:critical_count', len([s for s in apt_suspects if s['score'] >= 5]))
+                
+                print("\n✅ APT detection complete!")
+
+            if __name__ == "__main__":
+                detect_apt_patterns()
+            EOF
+            
+            python /tmp/hunter.py
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+      restartPolicy: Never
+  backoffLimit: 1

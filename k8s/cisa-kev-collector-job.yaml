@@ -1,0 +1,102 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cisa-kev-collector
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: collector
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet aiohttp redis neo4j
+            cat > /tmp/collector.py << 'EOF'
+            import asyncio
+            import aiohttp
+            import redis.asyncio as redis
+            from datetime import datetime
+
+            async def collect_kev():
+                print("=" * 60)
+                print("🔒 CISA KEV COLLECTOR")
+                print("=" * 60)
+                
+                # Connect to Redis
+                redis_client = redis.Redis(
+                    host='redis.cyber-pi.svc.cluster.local',
+                    port=6379,
+                    password='cyber-pi-redis-2025',
+                    decode_responses=True
+                )
+                
+                try:
+                    await redis_client.ping()
+                    print("✅ Connected to Redis")
+                except Exception as e:
+                    print(f"❌ Redis connection failed: {e}")
+                    return
+                
+                # Fetch CISA KEV data
+                url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+                
+                async with aiohttp.ClientSession() as session:
+                    try:
+                        print(f"\n📡 Fetching KEV data from CISA...")
+                        async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                            if response.status == 200:
+                                data = await response.json()
+                                vulnerabilities = data.get('vulnerabilities', [])
+                                
+                                print(f"✅ Retrieved {len(vulnerabilities)} vulnerabilities")
+                                
+                                # Store in Redis
+                                count = 0
+                                for vuln in vulnerabilities:
+                                    cve_id = vuln.get('cveID')
+                                    if cve_id:
+                                        key = f"cisa:kev:{cve_id}"
+                                        await redis_client.hset(key, mapping={
+                                            'cve_id': cve_id,
+                                            'vendor': vuln.get('vendorProject', ''),
+                                            'product': vuln.get('product', ''),
+                                            'vulnerability': vuln.get('vulnerabilityName', ''),
+                                            'date_added': vuln.get('dateAdded', ''),
+                                            'short_description': vuln.get('shortDescription', ''),
+                                            'required_action': vuln.get('requiredAction', ''),
+                                            'due_date': vuln.get('dueDate', ''),
+                                            'notes': vuln.get('notes', ''),
+                                            'collected_at': datetime.utcnow().isoformat()
+                                        })
+                                        count += 1
+                                
+                                # Store metadata
+                                await redis_client.set('cisa:kev:last_updated', datetime.utcnow().isoformat())
+                                await redis_client.set('cisa:kev:total_count', count)
+                                
+                                print(f"✅ Stored {count} vulnerabilities in Redis")
+                                print(f"\n📊 Summary:")
+                                print(f"   Total KEVs: {count}")
+                                print(f"   Last Updated: {datetime.utcnow().isoformat()}")
+                                
+                            else:
+                                print(f"❌ HTTP {response.status}: Failed to fetch KEV data")
+                    
+                    except Exception as e:
+                        print(f"❌ Error fetching data: {e}")
+                
+                await redis_client.close()
+                print("\n✅ Collection complete!")
+
+            if __name__ == "__main__":
+                asyncio.run(collect_kev())
+            EOF
+            
+            python /tmp/collector.py
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+      restartPolicy: Never
+  backoffLimit: 3
