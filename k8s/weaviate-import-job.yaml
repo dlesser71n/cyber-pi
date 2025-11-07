@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: weaviate-cve-import
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: weaviate-importer
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "Installing dependencies..."
+            pip install --quiet redis weaviate-client tqdm pydantic
+            
+            echo "Running Weaviate import..."
+            cd /app
+            python3 src/bootstrap/import_highway_to_weaviate.py
+        volumeMounts:
+        - name: app
+          mountPath: /app
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: REDIS_HOST
+          value: "redis.cyber-pi.svc.cluster.local"
+        - name: REDIS_PASSWORD
+          value: "cyber-pi-redis-2025"
+        - name: WEAVIATE_URL
+          value: "http://weaviate.cyber-pi.svc.cluster.local:8080"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+      volumes:
+      - name: app
+        hostPath:
+          path: /home/david/projects/cyber-pi
+          type: Directory
+      restartPolicy: Never
+  backoffLimit: 1

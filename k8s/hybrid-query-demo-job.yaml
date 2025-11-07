@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hybrid-query-demo
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: query-engine
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "Installing dependencies..."
+            pip install --quiet redis neo4j weaviate-client
+            
+            echo "Running hybrid query demonstrations..."
+            cd /app
+            python3 src/query/hybrid_query_engine.py
+        volumeMounts:
+        - name: app
+          mountPath: /app
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+      volumes:
+      - name: app
+        hostPath:
+          path: /home/david/projects/cyber-pi
+          type: Directory
+      restartPolicy: Never
+  backoffLimit: 1

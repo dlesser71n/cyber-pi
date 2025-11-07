@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: transform-cves-highway
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: transformer
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "Installing dependencies..."
+            pip install --quiet redis tqdm pydantic
+            
+            echo "Running transformation..."
+            cd /app
+            python3 src/bootstrap/transform_cves_to_highway.py
+        volumeMounts:
+        - name: app
+          mountPath: /app
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: REDIS_HOST
+          value: "redis.cyber-pi.svc.cluster.local"
+        - name: REDIS_PASSWORD
+          value: "cyber-pi-redis-2025"
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "8Gi"
+            cpu: "4"
+      volumes:
+      - name: app
+        hostPath:
+          path: /home/david/projects/cyber-pi
+          type: Directory
+      restartPolicy: Never
+  backoffLimit: 1

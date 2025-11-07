@@ -1,0 +1,133 @@
+---
+# Abuse.ch Collector Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: abusech-collector
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: collector
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis aiohttp tqdm
+            cd /app
+            python3 src/collectors/abusech_collector.py
+        volumeMounts:
+        - name: app
+          mountPath: /app
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: REDIS_HOST
+          value: "redis.cyber-pi.svc.cluster.local"
+        - name: REDIS_PASSWORD
+          value: "cyber-pi-redis-2025"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+      volumes:
+      - name: app
+        hostPath:
+          path: /home/david/projects/cyber-pi
+          type: Directory
+      restartPolicy: Never
+  backoffLimit: 1
+---
+# Exploit-DB Importer Job
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: exploitdb-importer
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: importer
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis tqdm
+            cd /app
+            python3 src/collectors/exploitdb_importer.py
+        volumeMounts:
+        - name: app
+          mountPath: /app
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: REDIS_HOST
+          value: "redis.cyber-pi.svc.cluster.local"
+        - name: REDIS_PASSWORD
+          value: "cyber-pi-redis-2025"
+        - name: EXPLOITDB_PATH
+          value: "/app/data/exploit-db"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+      volumes:
+      - name: app
+        hostPath:
+          path: /home/david/projects/cyber-pi
+          type: Directory
+      restartPolicy: Never
+  backoffLimit: 1
+---
+# OTX Collector Job (requires API key)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: otx-collector
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: collector
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis aiohttp tqdm
+            cd /app
+            python3 src/collectors/otx_collector.py
+        volumeMounts:
+        - name: app
+          mountPath: /app
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: REDIS_HOST
+          value: "redis.cyber-pi.svc.cluster.local"
+        - name: REDIS_PASSWORD
+          value: "cyber-pi-redis-2025"
+        - name: OTX_API_KEY
+          value: "0ea78965a8bf1bd225321d999f09850a7355e4614e863bcbfd8d1a384a5ea1f3"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1"
+          limits:
+            memory: "2Gi"
+            cpu: "2"
+      volumes:
+      - name: app
+        hostPath:
+          path: /home/david/projects/cyber-pi
+          type: Directory
+      restartPolicy: Never
+  backoffLimit: 1
