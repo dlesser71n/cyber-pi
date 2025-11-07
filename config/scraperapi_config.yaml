@@ -1,0 +1,416 @@
+# ScraperAPI Master Configuration for Dark Web Intelligence Collection
+# Professional-grade proxy rotation and web scraping
+
+# ScraperAPI Account Settings
+scraperapi:
+  api_key: "${SCRAPERAPI_KEY}"  # Set environment variable or replace with your key
+  dashboard_url: "https://dashboard.scraperapi.com"
+  documentation: "https://docs.scraperapi.com"
+
+# Request Configuration
+request:
+  # Base settings
+  timeout: 30
+  connect_timeout: 10
+  max_retries: 3
+  
+  # Rate limiting (adjust based on your plan)
+  requests_per_second: 10
+  concurrent_requests: 20
+  requests_per_domain: 5
+  
+  # Retry strategy
+  retry_404: false
+  exponential_backoff: true
+  retry_delay: 2  # seconds
+
+# Proxy Configuration
+proxy:
+  # Proxy types
+  premium: true      # Use premium proxies (recommended)
+  ultra_premium: false  # Use ultra-premium for difficult targets
+  residential: false  # Residential proxies (add-on)
+  mobile: false      # Mobile proxies (add-on)
+  
+  # Geographic targeting
+  default_country: "us"
+  country_rotation: ["us", "de", "gb", "nl", "fr", "ca", "ch"]
+  
+  # Session management
+  session_enabled: false  # Keep same IP for session
+  session_duration: 300   # seconds
+
+# JavaScript Rendering
+rendering:
+  # Enable JavaScript rendering
+  enabled: true
+  wait_for_selector: ""  # CSS selector to wait for
+  wait_time: 5000        # milliseconds to wait after page load
+  
+  # Browser settings
+  device_type: "desktop"  # desktop | mobile
+  viewport_width: 1920
+  viewport_height: 1080
+  user_agent: "random"    # random | custom string
+
+# Headers Configuration
+headers:
+  # Custom headers
+  keep_headers: true
+  custom_headers:
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    "Accept-Language": "en-US,en;q=0.5"
+    "Accept-Encoding": "gzip, deflate"
+    "Connection": "keep-alive"
+    "Upgrade-Insecure-Requests": "1"
+    "Sec-Fetch-Dest": "document"
+    "Sec-Fetch-Mode": "navigate"
+    "Sec-Fetch-Site": "none"
+    "Cache-Control": "max-age=0"
+
+# Dark Web Sources Configuration
+sources:
+  # High Priority Forums
+  hackernews:
+    url: "https://hackernews.io/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: false
+      premium: true
+      device_type: "desktop"
+      
+  nulled:
+    url: "https://nulled.to/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "de"
+      render: true
+      premium: true
+      device_type: "desktop"
+      wait_for_selector: ".topic_title"
+      
+  cracked:
+    url: "https://cracked.io/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "gb"
+      render: true
+      premium: true
+      device_type: "desktop"
+      wait_for_selector: ".thread-title"
+      
+  # Security Research
+  exploit_in:
+    url: "https://exploit.in/"
+    type: "forum"
+    priority: "medium"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: false
+      premium: true
+      device_type: "desktop"
+      
+  # Reddit Communities
+  reddit_netsec:
+    url: "https://www.reddit.com/r/netsec/"
+    type: "forum"
+    priority: "medium"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: true
+      premium: true
+      device_type: "desktop"
+      wait_for_selector: "._3xX726aBn29LDbsDtzr_6E"
+      
+  reddit_hacking:
+    url: "https://www.reddit.com/r/hacking/"
+    type: "forum"
+    priority: "medium"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: true
+      premium: true
+      device_type: "desktop"
+      
+  reddit_darknet:
+    url: "https://www.reddit.com/r/darknet/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "nl"
+      render: true
+      premium: true
+      device_type: "desktop"
+      
+  reddit_cybercrime:
+    url: "https://www.reddit.com/r/cybercrime/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: true
+      premium: true
+      device_type: "desktop"
+      
+  # Paste Sites
+  pastebin:
+    url: "https://pastebin.com/archive"
+    type: "paste"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: false
+      premium: true
+      device_type: "desktop"
+      
+  justpaste:
+    url: "https://justpaste.it/"
+    type: "paste"
+    priority: "medium"
+    enabled: true
+    scraperapi:
+      country_code: "de"
+      render: true
+      premium: true
+      device_type: "desktop"
+      
+  # Threat Intelligence Blogs
+  malware_traffic:
+    url: "https://www.malware-traffic-analysis.net/"
+    type: "blog"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: false
+      premium: true
+      device_type: "desktop"
+      
+  abuse_ch:
+    url: "https://feodotracker.abuse.ch/"
+    type: "blog"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "ch"
+      render: false
+      premium: true
+      device_type: "desktop"
+      
+  # Exploit Repositories
+  github_exploits:
+    url: "https://github.com/search?q=exploit+CVE&type=repositories"
+    type: "repository"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: true
+      premium: true
+      device_type: "desktop"
+      wait_for_selector: ".v-align-middle"
+      
+  exploit_db:
+    url: "https://www.exploit-db.com/"
+    type: "repository"
+    priority: "high"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: true
+      premium: true
+      device_type: "desktop"
+      
+  packet_storm:
+    url: "https://packetstormsecurity.com/"
+    type: "repository"
+    priority: "medium"
+    enabled: true
+    scraperapi:
+      country_code: "us"
+      render: false
+      premium: true
+      device_type: "desktop"
+
+# Intelligence Extraction Settings
+extraction:
+  # Content filtering
+  min_title_length: 10
+  max_content_length: 500
+  filter_noise: true
+  
+  # IOC Extraction
+  extract_ips: true
+  extract_domains: true
+  extract_emails: true
+  extract_hashes: true
+  extract_urls: true
+  extract_crypto_addresses: true
+  extract_phone_numbers: true
+  
+  # Entity Extraction
+  extract_threat_actors: true
+  extract_industries: true
+  extract_platforms: true
+  extract_prices: true
+  extract_data_types: true
+  
+  # Quality scoring
+  base_credibility: 0.5
+  proof_bonus: 0.1
+  verification_bonus: 0.1
+  length_bonus: 0.1
+  crypto_bonus: 0.1
+  tutorial_bonus: 0.1
+  max_credibility: 1.0
+
+# Output Configuration
+output:
+  # File settings
+  base_directory: "data/raw"
+  filename_format: "scraperapi_dark_web_{timestamp}.json"
+  
+  # Data processing
+  max_items_per_file: 1000
+  compress_output: false
+  include_raw_html: false
+  include_metadata: true
+  
+  # Export formats
+  json_enabled: true
+  csv_enabled: false
+  xml_enabled: false
+
+# Monitoring & Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Performance monitoring
+  track_response_times: true
+  track_proxy_performance: true
+  track_success_rates: true
+  track_credit_usage: true
+  
+  # Alerts
+  alert_on_failure_rate: 0.5
+  alert_on_credit_usage: 0.8
+  alert_on_response_time: 30
+
+# Advanced Features
+advanced:
+  # Smart retry with different configurations
+  smart_retry: true
+  retry_configurations:
+    - country_code: "us"
+      render: false
+      premium: true
+    - country_code: "de"
+      render: false
+      premium: true
+    - country_code: "gb"
+      render: false
+      premium: true
+    - country_code: "us"
+      render: true
+      premium: true
+    - country_code: "us"
+      render: false
+      ultra_premium: true
+  
+  # Content processing
+  html_parser: "html.parser"
+  clean_html: true
+  extract_links: true
+  extract_images: false
+  
+  # Deduplication
+  deduplicate_by_title: true
+  deduplicate_by_content: false
+  similarity_threshold: 0.8
+  
+  # Caching
+  cache_enabled: false
+  cache_ttl: 300
+  cache_size: 1000
+
+# Cost Optimization
+cost_control:
+  # Budget management
+  daily_credit_limit: 10000
+  cost_per_request: 0.001  # Approximate cost
+  max_requests_per_hour: 1000
+  
+  # Efficiency settings
+  enable_compression: true
+  batch_requests: false
+  prioritize_sources: true
+  
+  # Monitoring
+  track_costs: true
+  cost_alerts: true
+  usage_reports: true
+
+# Security Settings
+security:
+  # Privacy protection
+  rotate_user_agents: true
+  randomize_headers: true
+  respect_robots_txt: false  # For intelligence gathering
+  
+  # Request handling
+  follow_redirects: true
+  max_redirects: 3
+  verify_ssl: false  # For some underground sites
+  
+  # Stealth mode
+  stealth_mode: true
+  random_delays: true
+  human_like_behavior: true
+
+# Integration Settings
+integration:
+  # API endpoints
+  webhook_url: ""  # Send results to webhook
+  api_endpoint: ""  # Send results to API
+  
+  # Database storage
+  store_in_database: false
+  database_config:
+    type: "elasticsearch"  # elasticsearch | mongodb | postgresql
+    connection_string: ""
+    
+  # Real-time processing
+  real_time_processing: false
+  stream_results: false
+
+# Performance Tuning
+performance:
+  # Connection pooling
+  max_connections: 100
+  max_connections_per_host: 10
+  connection_timeout: 30
+  read_timeout: 60
+  
+  # Memory management
+  max_memory_usage: "1GB"
+  chunk_size: 100
+  garbage_collection: true
+  
+  # Async settings
+  max_concurrent_tasks: 50
+  task_timeout: 300
+  queue_size: 1000

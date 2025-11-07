@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-cisa-collector
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: collector
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "Installing dependencies..."
+            pip install --quiet httpx redis
+
+            cat > /tmp/collector.py << 'PYTHON'
+            import asyncio
+            import json
+            import httpx
+            from datetime import datetime, timezone
+            import hashlib
+            import redis.asyncio as redis
+
+            KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+
+            async def collect():
+                print("="*60)
+                print("🔒 CISA KEV TEST COLLECTOR")
+                print("="*60)
+
+                redis_client = await redis.from_url(
+                    "redis://:cyber-pi-redis-2025@redis.cyber-pi-intel.svc.cluster.local:6379",
+                    encoding="utf-8",
+                    decode_responses=True
+                )
+                print("✅ Redis connected")
+
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(KEV_URL, timeout=30.0)
+                    data = response.json()
+
+                vulns = data.get('vulnerabilities', [])
+                print(f"📊 Found {len(vulns)} KEV entries")
+
+                queued = 0
+                for vuln in vulns[:10]:  # Test with first 10
+                    cve = vuln.get('cveID', '')
+                    if not cve:
+                        continue
+
+                    tid = f"threat_{hashlib.sha256(cve.encode()).hexdigest()[:16]}"
+
+                    threat = {
+                        "threatId": tid,
+                        "title": f"CISA KEV: {cve} - {vuln.get('vulnerabilityName', 'Unknown')[:100]}",
+                        "content": f"Vendor: {vuln.get('vendorProject')}, Product: {vuln.get('product')}",
+                        "source": "CISA KEV Catalog",
+                        "sourceUrl": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+                        "severity": "critical",
+                        "cves": [cve],
+                        "publishedDate": vuln.get('dateAdded', datetime.now(timezone.utc).isoformat()),
+                        "ingestedDate": datetime.now(timezone.utc).isoformat()
+                    }
+
+                    await redis_client.setex(f"threat:parsed:{tid}", 86400, json.dumps(threat))
+                    await redis_client.lpush("queue:weaviate", tid)
+                    await redis_client.lpush("queue:neo4j", tid)
+                    queued += 1
+                    print(f"  Queued: {cve}")
+
+                print(f"\n✅ Test complete: {queued} threats queued")
+                await redis_client.aclose()
+
+            asyncio.run(collect())
+            PYTHON
+
+            python3 /tmp/collector.py

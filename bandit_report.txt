@@ -1,0 +1,224 @@
+Run started:2025-11-05 00:57:17.682959
+
+Test results:
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics.py:24:28
+23	    handlers=[
+24	        logging.FileHandler("/tmp/graph_analytics.log"),
+25	        logging.StreamHandler()
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics.py:416:13
+415	        import json
+416	        Path("/tmp/visualization").mkdir(exist_ok=True)
+417	        
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics.py:418:18
+417	        
+418	        with open("/tmp/visualization/top_cves.json", "w") as f:
+419	            json.dump(cves, f, indent=2)
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics.py:421:18
+420	            
+421	        with open("/tmp/visualization/top_threats.json", "w") as f:
+422	            json.dump(threats, f, indent=2)
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics.py:424:18
+423	            
+424	        with open("/tmp/visualization/communities.json", "w") as f:
+425	            json.dump(communities, f, indent=2)
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics_v2.py:27:28
+26	    handlers=[
+27	        logging.FileHandler("/tmp/graph_analytics.log", mode='w'),
+28	        logging.StreamHandler()
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics_v2.py:619:25
+618	                    import json
+619	                    Path("/tmp/visualization").mkdir(exist_ok=True)
+620	                    
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics_v2.py:621:30
+620	                    
+621	                    with open("/tmp/visualization/top_cves.json", "w") as f:
+622	                        json.dump(cves, f, indent=2)
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics_v2.py:624:30
+623	                    
+624	                    with open("/tmp/visualization/top_threats.json", "w") as f:
+625	                        json.dump(threats, f, indent=2)
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/analytics/graph_analytics_v2.py:627:30
+626	                    
+627	                    with open("/tmp/visualization/communities.json", "w") as f:
+628	                        json.dump(communities, f, indent=2)
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: src/bootstrap/ioc_generator.py:159:19
+158	        if hash_type == "md5":
+159	            return hashlib.md5(random_string.encode()).hexdigest()
+160	        elif hash_type == "sha1":
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak SHA1 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: src/bootstrap/ioc_generator.py:161:19
+160	        elif hash_type == "sha1":
+161	            return hashlib.sha1(random_string.encode()).hexdigest()
+162	        elif hash_type == "sha256":
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: src/bootstrap/ioc_generator.py:165:19
+164	        else:
+165	            return hashlib.md5(random_string.encode()).hexdigest()
+166	    
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/bootstrap/unified_threat_graph_builder_v2.py:32:28
+31	    handlers=[
+32	        logging.FileHandler("/tmp/threat_graph_builder.log", mode='w'),
+33	        logging.StreamHandler()
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b113_request_without_timeout.html
+   Location: src/collectors/scraperapi_collector.py:132:23
+131	        try:
+132	            response = requests.get(
+133	                'https://api.scraperapi.com/account',
+134	                params={'api_key': self.api_key}
+135	            )
+136	            
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: src/collectors/scraperapi_dark_web_collector.py:510:38
+509	                    item.session_id = f"session_{int(time.time())}"
+510	                    item.request_id = hashlib.md5(f"{source_name}{time.time()}".encode()).hexdigest()[:8]
+511	                
+
+--------------------------------------------------
+>> Issue: [B108:hardcoded_tmp_directory] Probable insecure usage of temp file/directory.
+   Severity: Medium   Confidence: Medium
+   CWE: CWE-377 (https://cwe.mitre.org/data/definitions/377.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b108_hardcoded_tmp_directory.html
+   Location: src/core/monitoring.py:23:28
+22	    handlers=[
+23	        logging.FileHandler("/tmp/enterprise_monitoring.log", mode='w'),
+24	        logging.StreamHandler()
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: src/cyber_pi_periscope_integration.py:268:19
+267	        content = f"{source}:{title}"
+268	        hash_obj = hashlib.md5(content.encode())
+269	        
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak MD5 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: src/newsletter/generator.py:73:25
+72	            # Create a normalized hash of the title
+73	            title_hash = hashlib.md5(title.lower().strip().encode()).hexdigest()
+74	            
+
+--------------------------------------------------
+>> Issue: [B113:request_without_timeout] Call to requests without timeout
+   Severity: Medium   Confidence: Low
+   CWE: CWE-400 (https://cwe.mitre.org/data/definitions/400.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b113_request_without_timeout.html
+   Location: src/processors/llama_classifier.py:40:23
+39	        try:
+40	            response = requests.get(f"{self.ollama_url}/api/tags")
+41	            models = response.json().get('models', [])
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 19281
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 69
+		Medium: 14
+		High: 6
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 2
+		Medium: 13
+		High: 74
+Files skipped (0):

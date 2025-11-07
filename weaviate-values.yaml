@@ -1,0 +1,66 @@
+# Weaviate Helm Values for Cyber-PI
+# Enables text2vec-transformers for semantic search
+
+# Replicas - single node
+replicas: 1
+
+# Disable clustering for single node
+cluster:
+  enabled: false
+
+# Resources
+resources:
+  requests:
+    cpu: "500m"
+    memory: "1Gi"
+  limits:
+    cpu: "2000m"
+    memory: "4Gi"
+
+# Modules - Enable text2vec-transformers
+modules:
+  text2vec-transformers:
+    enabled: true
+    tag: distilbert-base-uncased
+    repo: semitechnologies/transformers-inference
+    registry: cr.weaviate.io
+    envconfig:
+      enable_cuda: false
+
+# Storage - Use hostPath for simplicity
+storage:
+  size: 10Gi
+  storageClassName: microk8s-hostpath
+
+# Service
+service:
+  name: weaviate-cyberpi
+  type: ClusterIP
+  port: 8080
+
+# Authentication
+authentication:
+  anonymous_access:
+    enabled: true
+
+# Persistence
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: microk8s-hostpath
+
+# Environment variables
+env:
+  QUERY_DEFAULTS_LIMIT: 25
+  AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: true
+  PERSISTENCE_DATA_PATH: /var/lib/weaviate
+  DEFAULT_VECTORIZER_MODULE: none
+  ENABLE_MODULES: ""
+  TRANSFORMERS_INFERENCE_API: http://t2v-transformers:8080
+  LOG_LEVEL: info
+  LOG_FORMAT: json
+  CLUSTER_HOSTNAME: weaviate-0
+  CLUSTER_GOSSIP_BIND_PORT: "7100"
+  CLUSTER_DATA_BIND_PORT: "7101"
+  RAFT_BOOTSTRAP_EXPECT: "1"
+  RAFT_JOIN: "weaviate-0"

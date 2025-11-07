@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cyber-pi-intel
+  labels:
+    name: cyber-pi-intel
+    purpose: threat-intelligence
+    system: cyber-pi
+    architecture: simplified
+    stack: redis-weaviate-neo4j

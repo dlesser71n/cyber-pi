@@ -1,0 +1,268 @@
+# Dark Web Intelligence Collector Configuration
+# Pro scraper setup with rotating proxies
+
+# Collector Settings
+collector:
+  max_workers: 8
+  request_timeout: 30
+  connection_timeout: 10
+  retry_attempts: 3
+  delay_between_requests: 2  # seconds
+
+# Proxy Configuration
+proxy:
+  # Free proxy sources (replace with your own)
+  sources:
+    - "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt"
+    - "https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/http.txt"
+    - "https://raw.githubusercontent.com/clarketm/proxy-list/master/proxy-list-raw.txt"
+    - "https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/http.txt"
+  
+  # Proxy management
+  max_failures: 3
+  refresh_interval: 3600  # seconds
+  test_timeout: 5
+  
+  # Custom proxies (add your own here)
+  custom_proxies: []
+  # - "192.168.1.100:8080"
+  # - "proxy.example.com:3128"
+
+# User Agent Rotation
+user_agents:
+  - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  - "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
+  - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/121.0"
+  - "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/121.0"
+  - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+  - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"
+
+# Dark Web Sources
+sources:
+  # Hacker Forums
+  hackernews:
+    url: "https://hackernews.io/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    
+  nulled:
+    url: "https://nulled.to/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    
+  cracked:
+    url: "https://cracked.io/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    
+  exploit_in:
+    url: "https://exploit.in/"
+    type: "forum"
+    priority: "medium"
+    enabled: true
+
+  # Reddit Underground Communities
+  reddit_netsec:
+    url: "https://www.reddit.com/r/netsec/"
+    type: "forum"
+    priority: "medium"
+    enabled: true
+    
+  reddit_hacking:
+    url: "https://www.reddit.com/r/hacking/"
+    type: "forum"
+    priority: "medium"
+    enabled: true
+    
+  reddit_darknet:
+    url: "https://www.reddit.com/r/darknet/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+    
+  reddit_cybercrime:
+    url: "https://www.reddit.com/r/cybercrime/"
+    type: "forum"
+    priority: "high"
+    enabled: true
+
+  # Paste Sites (Leaked Data)
+  pastebin:
+    url: "https://pastebin.com/archive"
+    type: "paste"
+    priority: "high"
+    enabled: true
+    
+  justpaste:
+    url: "https://justpaste.it/"
+    type: "paste"
+    priority: "medium"
+    enabled: true
+    
+  paste_eu:
+    url: "https://paste.ee/"
+    type: "paste"
+    priority: "medium"
+    enabled: true
+
+  # Threat Intelligence Blogs
+  malware_traffic:
+    url: "https://www.malware-traffic-analysis.net/"
+    type: "blog"
+    priority: "high"
+    enabled: true
+    
+  abuse_ch:
+    url: "https://feodotracker.abuse.ch/"
+    type: "blog"
+    priority: "high"
+    enabled: true
+    
+  hybrid_analysis:
+    url: "https://www.hybrid-analysis.com/"
+    type: "blog"
+    priority: "medium"
+    enabled: true
+
+  # Exploit Repositories
+  github_exploits:
+    url: "https://github.com/search?q=exploit+CVE&type=repositories"
+    type: "repository"
+    priority: "high"
+    enabled: true
+    
+  exploit_db:
+    url: "https://www.exploit-db.com/"
+    type: "repository"
+    priority: "high"
+    enabled: true
+    
+  packet_storm:
+    url: "https://packetstormsecurity.com/"
+    type: "repository"
+    priority: "medium"
+    enabled: true
+
+  # Underground Marketplaces (Public Access)
+  empire_market:
+    url: "https://empire-market.org/"
+    type: "marketplace"
+    priority: "high"
+    enabled: false  # Often offline, enable when available
+    
+  white_house:
+    url: "https://whitehousemarket.org/"
+    type: "marketplace"
+    priority: "high"
+    enabled: false  # Often offline, enable when available
+
+# Intelligence Extraction Settings
+extraction:
+  # IOC Extraction
+  extract_ips: true
+  extract_domains: true
+  extract_emails: true
+  extract_hashes: true
+  extract_crypto_addresses: true
+  extract_phone_numbers: true
+  
+  # Content Analysis
+  max_content_length: 500
+  min_title_length: 10
+  detect_threat_actors: true
+  detect_urgency: true
+  detect_prices: true
+  detect_data_types: true
+  
+  # Credibility Scoring
+  base_credibility: 0.5
+  proof_bonus: 0.1
+  verification_bonus: 0.1
+  length_bonus: 0.1
+  crypto_bonus: 0.1
+  max_credibility: 1.0
+
+# Output Settings
+output:
+  # File paths
+  base_directory: "data/raw"
+  filename_format: "dark_web_intelligence_{timestamp}.json"
+  
+  # Data retention
+  max_items_per_file: 1000
+  compress_output: false
+  
+  # Reporting
+  generate_summary: true
+  include_raw_content: true
+  include_metadata: true
+
+# Rate Limiting
+rate_limiting:
+  # Respectful delays
+  delay_between_requests: 2
+  delay_between_sources: 5
+  max_concurrent_requests_per_domain: 4
+  
+  # Error handling
+  max_retries: 3
+  backoff_factor: 2
+  retry_on_status: [429, 503, 504]
+
+# Monitoring & Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # Performance monitoring
+  track_response_times: true
+  track_proxy_performance: true
+  track_source_success: true
+  
+  # Alerts
+  alert_on_failure_rate: 0.5  # Alert if 50% of sources fail
+  alert_on_proxy_exhaustion: true
+
+# Security Settings
+security:
+  # Request headers
+  custom_headers:
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    "Accept-Language": "en-US,en;q=0.5"
+    "Accept-Encoding": "gzip, deflate"
+    "Connection": "keep-alive"
+    "Upgrade-Insecure-Requests": "1"
+  
+  # Privacy
+  respect_robots_txt: true
+  follow_redirects: true
+  max_redirects: 3
+  
+  # Timeout settings
+  connect_timeout: 10
+  read_timeout: 30
+  total_timeout: 60
+
+# Advanced Features
+advanced:
+  # Content processing
+  use_beautifulsoup: true
+  html_parser: "html.parser"
+  
+  # Proxy rotation
+  rotate_on_failure: true
+  test_proxies_before_use: false
+  
+  # Caching
+  cache_enabled: false
+  cache_ttl: 300  # seconds
+  
+  # Deduplication
+  deduplicate_by_title: true
+  deduplicate_by_content: false
+  similarity_threshold: 0.8

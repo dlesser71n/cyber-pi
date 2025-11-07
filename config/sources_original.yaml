@@ -1,0 +1,302 @@
+# cyber-pi Intelligence Sources Configuration
+# 150+ Free Cybersecurity Intelligence Sources
+# Organized by category and priority
+
+# ============================================================================
+# GOVERNMENT & STANDARDS (Tier 1 - Critical)
+# ============================================================================
+government:
+  priority: critical
+  collection_interval: 300  # 5 minutes
+  sources:
+    - name: "CISA Cybersecurity Advisories"
+      url: "https://www.cisa.gov/cybersecurity-advisories/all.xml"
+      type: rss
+      credibility: 0.95
+      
+    - name: "NIST National Vulnerability Database"
+      url: "https://services.nvd.nist.gov/rest/json/cves/2.0/"
+      type: api
+      credibility: 0.95
+      
+    - name: "FBI IC3 Public Alerts"
+      url: "https://www.ic3.gov/Media/default.aspx"
+      type: web_scrape
+      credibility: 0.95
+      
+    - name: "ICS-CERT Advisories"
+      url: "https://www.cisa.gov/sites/default/files/feeds/ics-alerts.xml"
+      type: rss
+      credibility: 0.95
+      
+    - name: "MITRE ATT&CK"
+      url: "https://attack.mitre.org/"
+      type: api
+      credibility: 0.95
+
+# ============================================================================
+# INDUSTRIAL/OT SPECIALIZED (Tier 1 - Critical for Nexum clients)
+# ============================================================================
+industrial_ot:
+  priority: critical
+  collection_interval: 300  # 5 minutes
+  sources:
+    # Nuclear Power
+    - name: "NRC Cybersecurity"
+      url: "https://www.nrc.gov/security/cyber-security.html"
+      type: web_scrape
+      credibility: 0.95
+      tags: [nuclear, power, critical_infrastructure]
+      
+    # Power Grid
+    - name: "NERC CIP Standards"
+      url: "https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx"
+      type: web_scrape
+      credibility: 0.95
+      tags: [power_grid, compliance, critical_infrastructure]
+      
+    # SCADA/ICS Vendors
+    - name: "Siemens Security Advisories"
+      url: "https://www.siemens.com/global/en/products/services/cert.html"
+      type: rss
+      credibility: 0.90
+      tags: [scada, ics, vendor]
+      
+    - name: "Schneider Electric Security Notifications"
+      url: "https://www.se.com/ww/en/work/support/cybersecurity/security-notifications.jsp"
+      type: web_scrape
+      credibility: 0.90
+      tags: [scada, ics, vendor]
+      
+    - name: "Rockwell Automation Security Advisories"
+      url: "https://www.rockwellautomation.com/en-us/support/advisory.html"
+      type: rss
+      credibility: 0.90
+      tags: [scada, ics, vendor]
+      
+    # OT Security Research
+    - name: "Dragos Industrial Threat Intelligence"
+      url: "https://www.dragos.com/blog/"
+      type: rss
+      credibility: 0.85
+      tags: [ot_security, research, industrial]
+      
+    - name: "Claroty Team82 Research"
+      url: "https://claroty.com/team82/research"
+      type: rss
+      credibility: 0.85
+      tags: [ot_security, research, industrial]
+
+# ============================================================================
+# NEXUM VENDOR PARTNERS (80+ partners)
+# ============================================================================
+nexum_vendors:
+  priority: high
+  collection_interval: 600  # 10 minutes
+  sources:
+    # Major Platform Vendors
+    - name: "Palo Alto Unit 42"
+      url: "https://unit42.paloaltonetworks.com/feed/"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, firewall]
+      
+    - name: "Fortinet FortiGuard Labs"
+      url: "https://www.fortiguard.com/rss/ir.xml"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, firewall]
+      
+    - name: "Cisco Talos Intelligence"
+      url: "https://blog.talosintelligence.com/feeds/posts/default"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, network]
+      
+    - name: "Juniper Threat Labs"
+      url: "https://blogs.juniper.net/en-us/threat-research/rss.xml"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, network]
+      
+    - name: "Microsoft Security Response Center"
+      url: "https://msrc.microsoft.com/blog/feed"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, cloud]
+      
+    - name: "CrowdStrike Intelligence"
+      url: "https://www.crowdstrike.com/blog/feed/"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, endpoint]
+      
+    - name: "SentinelOne Labs"
+      url: "https://www.sentinelone.com/labs/feed/"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, endpoint]
+      
+    - name: "Check Point Research"
+      url: "https://research.checkpoint.com/feed/"
+      type: rss
+      credibility: 0.90
+      tags: [vendor, nexum_partner, firewall]
+
+# ============================================================================
+# TECHNICAL INTELLIGENCE (High Value)
+# ============================================================================
+technical:
+  priority: high
+  collection_interval: 600  # 10 minutes
+  sources:
+    - name: "Exploit-DB"
+      url: "https://www.exploit-db.com/rss.xml"
+      type: rss
+      credibility: 0.85
+      tags: [exploits, vulnerabilities]
+      
+    - name: "Packet Storm Security"
+      url: "https://packetstormsecurity.com/feeds/"
+      type: rss
+      credibility: 0.85
+      tags: [exploits, tools]
+      
+    - name: "Malware Traffic Analysis"
+      url: "https://www.malware-traffic-analysis.net/blog-entries.rss"
+      type: rss
+      credibility: 0.85
+      tags: [malware, analysis]
+      
+    - name: "AlienVault OTX"
+      url: "https://otx.alienvault.com/api/v1/pulses/subscribed"
+      type: api
+      credibility: 0.80
+      tags: [threat_intelligence, iocs]
+
+# ============================================================================
+# NEWS & RESEARCH (Medium-High Priority)
+# ============================================================================
+news_research:
+  priority: medium_high
+  collection_interval: 900  # 15 minutes
+  sources:
+    - name: "Krebs on Security"
+      url: "https://krebsonsecurity.com/feed/"
+      type: rss
+      credibility: 0.85
+      tags: [news, research, investigative]
+      
+    - name: "The Hacker News"
+      url: "https://thehackernews.com/feeds/posts/default"
+      type: rss
+      credibility: 0.80
+      tags: [news, breaking]
+      
+    - name: "Bleeping Computer"
+      url: "https://www.bleepingcomputer.com/feed/"
+      type: rss
+      credibility: 0.80
+      tags: [news, technical]
+      
+    - name: "Dark Reading"
+      url: "https://www.darkreading.com/rss_simple.asp"
+      type: rss
+      credibility: 0.80
+      tags: [news, enterprise]
+      
+    - name: "Threatpost"
+      url: "https://threatpost.com/feed/"
+      type: rss
+      credibility: 0.80
+      tags: [news, threats]
+
+# ============================================================================
+# SOCIAL MEDIA INTELLIGENCE (Medium Priority)
+# ============================================================================
+social_media:
+  priority: medium
+  collection_interval: 1800  # 30 minutes
+  sources:
+    - name: "Twitter Security Community"
+      type: twitter
+      credibility: 0.70
+      accounts:
+        - "@malware_traffic"
+        - "@sansISC"
+        - "@threatintel"
+        - "@vxunderground"
+        - "@malwrhunterteam"
+      tags: [social, real_time]
+      
+    - name: "Reddit Cybersecurity"
+      type: reddit
+      credibility: 0.65
+      subreddits:
+        - "netsec"
+        - "cybersecurity"
+        - "malware"
+        - "ReverseEngineering"
+      tags: [social, community]
+      
+    - name: "GitHub Security Advisories"
+      type: github
+      credibility: 0.75
+      tags: [open_source, vulnerabilities]
+
+# ============================================================================
+# UNDERGROUND INTELLIGENCE (Low-Medium Priority, High Value)
+# ============================================================================
+underground:
+  priority: medium
+  collection_interval: 3600  # 1 hour
+  use_proxy: true
+  sources:
+    - name: "Pastebin Monitoring"
+      url: "https://pastebin.com/archive"
+      type: web_scrape
+      credibility: 0.50
+      tags: [paste_sites, leaks]
+      
+    - name: "GitHub Gists"
+      url: "https://gist.github.com/discover"
+      type: web_scrape
+      credibility: 0.55
+      tags: [paste_sites, code_leaks]
+
+# ============================================================================
+# COMPLIANCE & REGULATORY (Medium Priority)
+# ============================================================================
+compliance:
+  priority: medium
+  collection_interval: 3600  # 1 hour
+  sources:
+    - name: "NIST Cybersecurity Framework Updates"
+      url: "https://www.nist.gov/cyberframework"
+      type: web_scrape
+      credibility: 0.95
+      tags: [compliance, framework]
+      
+    - name: "HIPAA Security Updates"
+      url: "https://www.hhs.gov/hipaa/for-professionals/security/index.html"
+      type: web_scrape
+      credibility: 0.95
+      tags: [compliance, healthcare]
+      
+    - name: "PCI DSS Updates"
+      url: "https://www.pcisecuritystandards.org/"
+      type: web_scrape
+      credibility: 0.95
+      tags: [compliance, financial]
+
+# ============================================================================
+# COLLECTION SETTINGS
+# ============================================================================
+collection_settings:
+  max_concurrent_sources: 128
+  request_timeout: 30
+  retry_attempts: 3
+  retry_delay: 5
+  user_agent: "cyber-pi/1.0 (Enterprise Threat Intelligence)"
+  respect_robots_txt: true
+  rate_limit_per_source: 60  # requests per minute

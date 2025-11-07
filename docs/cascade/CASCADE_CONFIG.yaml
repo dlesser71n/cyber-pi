@@ -1,0 +1,323 @@
+# Cascade AI Assistant Configuration for cyber-pi Project
+# Created: October 31, 2025
+# Purpose: Document user preferences and communication settings
+
+version: 1.0.0
+project: cyber-pi
+created: 2025-10-31
+
+# ============================================================================
+# COMMUNICATION PREFERENCES (CRITICAL - ALWAYS FOLLOW)
+# ============================================================================
+
+communication:
+  
+  # User explicitly requested ALWAYS display maximum detail and reasoning
+  show_thinking: true
+  detail_level: maximum
+  transparency: full
+  
+  reasoning_display:
+    enabled: true
+    always_show: true
+    include:
+      - thought_process_before_actions
+      - approach_selection_rationale
+      - alternative_considerations
+      - tool_selection_reasoning
+      - uncertainties_and_assumptions
+      - step_by_step_breakdowns
+      - decision_making_process
+      - tradeoff_analysis
+    
+  verbosity:
+    level: maximum
+    be_explicit_about: 
+      - what_im_thinking
+      - why_im_doing_it
+      - what_alternatives_i_considered
+      - what_risks_exist
+      - what_assumptions_im_making
+      - what_the_expected_outcome_is
+  
+  response_style:
+    - transparent
+    - detailed
+    - educational
+    - show_work
+    - explain_reasoning
+    - no_hidden_decisions
+
+# ============================================================================
+# TECHNICAL PREFERENCES
+# ============================================================================
+
+technical:
+  
+  python:
+    package_manager: uv pip  # NEVER use regular pip
+    commands:
+      install: "uv pip install {package}"
+      upgrade: "uv pip install --upgrade {package}"
+      freeze: "uv pip freeze"
+      list: "uv pip list"
+  
+  infrastructure:
+    container_runtime: microk8s  # NOT Docker
+    orchestration: kubernetes
+    ingress: nginx  # Preferred over NodePort
+  
+  development:
+    prefer_minimal_edits: true
+    follow_existing_style: true
+    write_general_purpose_solutions: true
+    avoid_hardcoded_shortcuts: true
+
+# ============================================================================
+# PROJECT-SPECIFIC SETTINGS
+# ============================================================================
+
+cyber_pi:
+  
+  purpose: "Fortune 1000 Threat Intelligence Platform"
+  
+  core_features:
+    - 80 intelligence sources (RSS + Social)
+    - 18 Fortune 1000 industry verticals
+    - Real-time threat collection
+    - Automated newsletter generation
+    - Expert enrichment system
+    - Gartner solution mapping
+  
+  enrichment_strategy:
+    enabled: true
+    sections:
+      priority_1:
+        - gartner_solution_mapping
+        - technology_stack_gaps
+        - 30_day_quick_wins
+        - budget_planning_roadmap
+      priority_2:
+        - mitre_attack_mapping
+        - peer_benchmarking
+        - multi_benefit_solutions
+      priority_3:
+        - vendor_comparison_matrix
+        - tco_analysis
+        - implementation_timeline
+  
+  api_keys:
+    scraperapi: dde48b3aff8b925ef434659cee50c86a
+    # Add others as needed
+  
+  market_opportunity:
+    total_addressable_market: "$24M-60M annually"
+    target_year_1: "50 clients = $1.5M ARR"
+    pricing_tiers:
+      basic: "$500-1,000/month"
+      premium: "$2,000-5,000/month"
+      strategic: "$10,000-25,000/month"
+
+# ============================================================================
+# WORKFLOW PREFERENCES
+# ============================================================================
+
+workflow:
+  
+  planning:
+    use_update_plan: true
+    keep_concise: true
+    one_step_in_progress: true
+    mark_done_immediately: true
+  
+  testing:
+    design_tests_first: true
+    never_delete_tests: true
+    never_weaken_tests: true
+    share_verification_commands: true
+  
+  code_changes:
+    prefer_existing_files: true
+    minimal_focused_edits: true
+    use_edit_tool: true
+    use_multi_edit_tool: true  # When multiple edits needed
+    avoid_new_files_unless_required: true
+  
+  verification:
+    prefer_automated: true
+    provide_copyable_commands: true
+    test_before_declaring_done: true
+
+# ============================================================================
+# MEMORY MANAGEMENT
+# ============================================================================
+
+memory:
+  
+  create_proactively: true
+  dont_wait_for_permission: true
+  dont_wait_for_task_completion: true
+  save_important_context: true
+  
+  what_to_save:
+    - user_preferences
+    - explicit_requests
+    - important_code_snippets
+    - technical_stacks
+    - project_structure
+    - major_milestones
+    - design_patterns
+    - architectural_decisions
+
+# ============================================================================
+# CODE INTERACTION
+# ============================================================================
+
+code_interaction:
+  
+  before_editing:
+    - read_file_first
+    - understand_context
+    - verify_relevance
+  
+  when_editing:
+    - preserve_exact_indentation
+    - match_existing_style
+    - ensure_idiomatic_code
+    - dont_leave_broken_state
+    - use_absolute_paths
+    - no_emojis_unless_requested
+  
+  research:
+    dont_guess: true
+    use_tools_to_verify: true
+    examine_code_directly: true
+    state_uncertainty_clearly: true
+
+# ============================================================================
+# ANTI-PATTERNS (NEVER DO THESE)
+# ============================================================================
+
+never:
+  - use_regular_pip  # Always use uv pip
+  - assume_docker  # System uses MicroK8s
+  - include_cd_in_commands  # Use cwd parameter instead
+  - guess_at_behavior  # Always verify with tools
+  - make_changes_without_reading  # Read files first
+  - acknowledge_checkpoint_messages  # Just read them silently
+  - output_code_to_user  # Use edit tools instead
+  - exceed_64000_token_limit  # Break up large edits
+  - add_emojis_unless_requested  # Professional by default
+  - hide_reasoning  # ALWAYS show thinking (NEW RULE)
+
+# ============================================================================
+# REPORTING & DOCUMENTATION
+# ============================================================================
+
+reporting:
+  
+  use_markdown_formatting: true
+  
+  markdown_rules:
+    - use_single_backtick_for_inline_code
+    - use_fenced_blocks_for_snippets
+    - use_headings_for_sections
+    - bold_list_item_titles
+    - never_use_unicode_bullets
+  
+  progress_updates:
+    frequency: after_tool_clusters
+    style: brief_summaries
+    include_next_steps: true
+  
+  final_summaries:
+    always_provide: true
+    include:
+      - what_was_accomplished
+      - files_created_modified
+      - tests_passed
+      - production_readiness
+      - next_actions
+
+# ============================================================================
+# ENRICHMENT SYSTEM (cyber-pi specific)
+# ============================================================================
+
+enrichment:
+  
+  intelligence_database: src/intelligence/industry_intelligence_db.yaml
+  
+  template: src/templates/enriched_email_template.html
+  
+  sections_to_include:
+    - threat_landscape_analysis
+    - active_threat_actors
+    - critical_vulnerabilities
+    - recommended_security_controls
+    - compliance_updates
+    - industry_statistics
+    - gartner_solution_mapping  # NEW
+    - technology_stack_gaps     # NEW
+    - quick_wins_30_days       # NEW
+    - budget_planning          # NEW
+  
+  value_proposition:
+    before: "Just threat intelligence"
+    after: "Strategic security advisory with actionable roadmap"
+    
+  pricing_justification:
+    basic_reports: "$2K/month - just intel"
+    enriched_reports: "$5K/month - intel + expert analysis"
+    strategic_tier: "$10K-25K/month - full advisory"
+
+# ============================================================================
+# SUCCESS METRICS
+# ============================================================================
+
+success_metrics:
+  
+  code_quality:
+    - immediately_runnable
+    - all_imports_present
+    - dependencies_documented
+    - proper_error_handling
+    - idiomatic_patterns
+  
+  communication:
+    - reasoning_always_visible  # NEW CRITICAL METRIC
+    - uncertainty_stated_clearly
+    - assumptions_explicit
+    - alternatives_considered
+    - tradeoffs_explained
+  
+  project_delivery:
+    - production_ready_code
+    - comprehensive_testing
+    - complete_documentation
+    - deployment_instructions
+    - success_criteria_met
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+notes: |
+  This configuration file documents the user's preferences and project settings
+  for the cyber-pi threat intelligence platform. 
+  
+  CRITICAL: The user has explicitly requested MAXIMUM DETAIL and TRANSPARENCY
+  in all reasoning and decision-making processes. This is not optional - it's
+  a core requirement that must be followed in every interaction.
+  
+  All AI assistants working on this project should:
+  1. Read this file first
+  2. Follow all preferences strictly
+  3. Show all thinking and reasoning
+  4. Be maximally transparent
+  5. Never hide decision-making processes
+  
+  Last updated: October 31, 2025
+
+# ============================================================================
+# END OF CONFIGURATION
+# ============================================================================

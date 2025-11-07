@@ -1,0 +1,105 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: threat-ingestion
+  namespace: cyber-pi-intel
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: ingestion
+        image: python:3.12-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            set -e
+            echo "🔥 THREAT INGESTION JOB"
+            echo "Installing dependencies..."
+            
+            pip install --quiet weaviate-client neo4j redis stix2 stix2-patterns
+            
+            echo "📥 Downloading data and scripts..."
+            
+            # Create ingestion script inline
+            cat > /tmp/ingest.py << 'PYTHON_SCRIPT'
+            import json
+            import sys
+            import asyncio
+            from datetime import datetime, timezone
+            import hashlib
+            import re
+
+            # Install if needed
+            import weaviate
+            import weaviate.classes.config as wvcc
+            from neo4j import GraphDatabase
+            import redis.asyncio as redis
+            from stix2 import Malware, ThreatActor, Identity, Vulnerability, Indicator, AttackPattern, Relationship, Bundle
+            
+            print("✅ All imports successful")
+            
+            # Simplified ingestion for Weaviate only
+            async def ingest():
+                print("Connecting to Weaviate...")
+                client = weaviate.connect_to_custom(
+                    http_host="weaviate.cyber-pi-intel.svc.cluster.local",
+                    http_port=8080,
+                    http_secure=False,
+                    grpc_host="weaviate.cyber-pi-intel.svc.cluster.local",
+                    grpc_port=50051,
+                    grpc_secure=False
+                )
+                
+                collection = client.collections.get("CyberThreatIntelligence")
+                
+                # Load data from mounted volume
+                with open('/data/master_collection.json') as f:
+                    data = json.load(f)
+                
+                items = data['items']
+                print(f"📊 Processing {len(items)} threats...")
+                
+                count = 0
+                for i, item in enumerate(items):
+                    if i % 100 == 0:
+                        print(f"  Progress: {i}/{len(items)}")
+                    
+                    threat_id = f"threat_{item.get('id', hashlib.sha256((item.get('title', '') + item.get('link', '')).encode()).hexdigest()[:16])}"
+                    
+                    try:
+                        collection.data.insert({
+                            "threatId": threat_id,
+                            "title": item.get('title', 'Unknown'),
+                            "content": item.get('content', '')[:10000],
+                            "summary": item.get('content', '')[:500],
+                            "source": item.get('source', 'cyber-pi'),
+                            "sourceUrl": item.get('link', ''),
+                            "industry": ["General"],
+                            "severity": "medium",
+                            "threatType": ["unknown"],
+                            "publishedDate": item.get('published', datetime.now(timezone.utc).isoformat()),
+                            "ingestedDate": datetime.now(timezone.utc).isoformat()
+                        })
+                        count += 1
+                    except Exception as e:
+                        print(f"  Failed {threat_id}: {e}")
+                
+                client.close()
+                print(f"\n✅ Ingested {count}/{len(items)} threats")
+            
+            asyncio.run(ingest())
+            PYTHON_SCRIPT
+            
+            python /tmp/ingest.py
+            
+            echo "✅ INGESTION COMPLETE"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+          readOnly: true
+      volumes:
+      - name: data
+        hostPath:
+          path: /home/david/projects/cyber-pi/data/raw
+          type: Directory

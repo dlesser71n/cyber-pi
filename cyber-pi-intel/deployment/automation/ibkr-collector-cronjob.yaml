@@ -1,0 +1,178 @@
+---
+# ConfigMap with IBKR client collector script
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ibkr-collector-script
+  namespace: cyber-pi-intel
+data:
+  ibkr_client_collector.py: |
+    #!/usr/bin/env python3
+    """IBKR Financial Intelligence Client Collector"""
+    import asyncio
+    import json
+    import os
+    import hashlib
+    from datetime import datetime, timezone
+    import httpx
+    import redis.asyncio as redis
+
+    # Configuration from environment
+    IBKR_SERVICE_URL = os.getenv('IBKR_SERVICE_URL', 'http://ibkr-service:8001')
+    IBKR_API_KEY = os.getenv('IBKR_API_KEY', 'dev-key-change-in-production')
+    REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
+    REDIS_HOST = os.getenv('REDIS_HOST', 'redis.cyber-pi-intel.svc.cluster.local')
+    REDIS_PORT = os.getenv('REDIS_PORT', '6379')
+    REDIS_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}"
+
+    CYBER_KEYWORDS = [
+        'breach', 'hacked', 'ransomware', 'cyberattack', 'cyber attack',
+        'data leak', 'vulnerability', 'zero-day', 'exploit', 'malware',
+        'phishing', 'ddos', 'denial of service', 'security incident',
+        'unauthorized access', 'data theft', 'compromised', 'intrusion',
+        'data breach', 'security breach', 'hack', 'stolen data'
+    ]
+
+    async def collect():
+        print("="*60)
+        print("💰 IBKR FINANCIAL INTELLIGENCE CLIENT COLLECTOR")
+        print("="*60)
+        print()
+
+        # Connect to Redis
+        redis_client = await redis.from_url(
+            REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True
+        )
+        await redis_client.ping()
+        print("✅ Connected to Redis")
+        print()
+
+        # Call IBKR service
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            print(f"🔍 Checking IBKR service: {IBKR_SERVICE_URL}")
+            health = await client.get(f"{IBKR_SERVICE_URL}/health")
+            print(f"✅ IBKR service: {health.json()['status']}")
+            print()
+
+            print("📰 Collecting cyber-relevant financial news...")
+            response = await client.post(
+                f"{IBKR_SERVICE_URL}/api/v1/news/filter",
+                json={
+                    "keywords": CYBER_KEYWORDS,
+                    "providers": None,
+                    "time_range_hours": 168,  # Last week (markets closed on weekends)
+                    "limit": 100
+                },
+                headers={"X-API-Key": IBKR_API_KEY}
+            )
+
+            articles = response.json()["articles"]
+            print(f"✅ Received {len(articles)} cyber-relevant articles")
+            print()
+
+            if articles:
+                print("🚀 Pushing to Redis highway...")
+                queued = 0
+                for article in articles:
+                    # Convert to threat format
+                    id_str = f"ibkr_{article['provider_code']}_{article['article_id']}"
+                    threat_id = f"threat_{hashlib.sha256(id_str.encode()).hexdigest()[:16]}"
+
+                    # Check if exists
+                    if await redis_client.get(f"threat:parsed:{threat_id}"):
+                        continue
+
+                    severity = "medium"
+                    headline = article['headline'].lower()
+                    if any(w in headline for w in ['breach', 'ransomware', 'compromised']):
+                        severity = "high"
+                    if any(w in headline for w in ['zero-day', 'critical', 'emergency']):
+                        severity = "critical"
+
+                    threat_data = {
+                        "threatId": threat_id,
+                        "title": f"IBKR Financial Alert: {article['headline'][:200]}",
+                        "content": article.get('body', article['headline']),
+                        "source": f"IBKR - {article['provider_code']}",
+                        "sourceUrl": IBKR_SERVICE_URL,
+                        "industry": ["financial", "technology"],
+                        "severity": severity,
+                        "threatType": ["financial_indicator"],
+                        "publishedDate": article['timestamp'],
+                        "ingestedDate": datetime.now(timezone.utc).isoformat(),
+                        "metadata": {
+                            "source_type": "ibkr_financial",
+                            "provider_code": article['provider_code'],
+                            "symbols": article.get('symbols', [])
+                        }
+                    }
+
+                    await redis_client.setex(f"threat:parsed:{threat_id}", 86400 * 7, json.dumps(threat_data))
+                    await redis_client.lpush("queue:weaviate", threat_id)
+                    await redis_client.lpush("queue:neo4j", threat_id)
+                    queued += 1
+
+                print(f"✅ Queued {queued} new items to Redis highway")
+            else:
+                print("ℹ️  No cyber-relevant financial news (normal - incidents are rare)")
+
+        await redis_client.aclose()
+        print("="*60)
+        print("✅ Collection complete")
+        print("="*60)
+
+    if __name__ == "__main__":
+        asyncio.run(collect())
+
+---
+# CronJob to run IBKR collector every 5 minutes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ibkr-financial-collector
+  namespace: cyber-pi-intel
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: collector
+            image: python:3.11-slim
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                pip install --quiet httpx redis
+                python3 /scripts/ibkr_client_collector.py
+            env:
+            - name: IBKR_SERVICE_URL
+              value: "http://192.168.28.194:8001"  # IBKR service on host machine
+            - name: IBKR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: ibkr-api-key
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: redis-password
+            - name: REDIS_HOST
+              value: "redis.cyber-pi-intel.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          volumes:
+          - name: scripts
+            configMap:
+              name: ibkr-collector-script

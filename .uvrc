@@ -1,0 +1,3 @@
+# UV Configuration for Cyber-PI
+UV_SYSTEM_PYTHON=1
+UV_COMPILE_BYTECODE=1

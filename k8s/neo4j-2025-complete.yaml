@@ -1,0 +1,153 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: neo4j
+  namespace: cyber-pi-intel
+  labels:
+    app: neo4j
+spec:
+  ports:
+  - port: 7474
+    targetPort: 7474
+    name: http
+  - port: 7687
+    targetPort: 7687
+    name: bolt
+  selector:
+    app: neo4j
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: neo4j
+  namespace: cyber-pi-intel
+spec:
+  serviceName: neo4j
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neo4j
+  template:
+    metadata:
+      labels:
+        app: neo4j
+    spec:
+      initContainers:
+      # Download APOC plugin
+      - name: download-apoc
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "Downloading APOC 5.26.0..."
+          wget -O /plugins/apoc-5.26.0-core.jar \
+            https://github.com/neo4j/apoc/releases/download/5.26.0/apoc-5.26.0-core.jar
+          echo "APOC downloaded: $(ls -lh /plugins/apoc-5.26.0-core.jar)"
+        volumeMounts:
+        - name: plugins
+          mountPath: /plugins
+      
+      # Download GDS plugin  
+      - name: download-gds
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "Downloading GDS 2.22.0..."
+          wget -O /plugins/neo4j-graph-data-science-2.22.0.jar \
+            https://github.com/neo4j/graph-data-science/releases/download/2.22.0/neo4j-graph-data-science-2.22.0.jar
+          echo "GDS downloaded: $(ls -lh /plugins/neo4j-graph-data-science-2.22.0.jar)"
+        volumeMounts:
+        - name: plugins
+          mountPath: /plugins
+      
+      containers:
+      - name: neo4j
+        image: neo4j:2025.10.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 7474
+          name: http
+        - containerPort: 7687
+          name: bolt
+        env:
+        - name: NEO4J_AUTH
+          value: "neo4j/cyber-pi-neo4j-2025"
+        
+        # Plugin configuration
+        - name: NEO4J_server_config_strict__validation_enabled
+          value: "false"
+        - name: NEO4J_dbms_security_procedures_unrestricted
+          value: "gds.*,apoc.*"
+        - name: NEO4J_dbms_security_procedures_allowlist
+          value: "gds.*,apoc.*"
+        
+        # Performance tuning
+        - name: NEO4J_server_memory_heap_initial__size
+          value: "4g"
+        - name: NEO4J_server_memory_heap_max__size
+          value: "8g"
+        - name: NEO4J_server_memory_pagecache_size
+          value: "4g"
+        
+        # Network
+        - name: NEO4J_server_default__listen__address
+          value: "0.0.0.0"
+        
+        volumeMounts:
+        - name: neo4j-data
+          mountPath: /data
+        - name: neo4j-logs
+          mountPath: /logs
+        - name: plugins
+          mountPath: /var/lib/neo4j/plugins
+        
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "2000m"
+          limits:
+            memory: "16Gi"
+            cpu: "4000m"
+        
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 7474
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 7474
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      
+      volumes:
+      - name: plugins
+        emptyDir: {}
+  
+  volumeClaimTemplates:
+  - metadata:
+      name: neo4j-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 200Gi
+  - metadata:
+      name: neo4j-logs
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 20Gi

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ industry_name }} Threat Intelligence Report - ENRICHED</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .enriched-badge {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            padding: 30px 20px;
+            background: #f9f9f9;
+        }
+        .summary-card {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-card h3 {
+            margin: 0;
+            font-size: 32px;
+            color: #667eea;
+        }
+        .summary-card p {
+            margin: 5px 0 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .critical { color: #ff4444 !important; }
+        .high { color: #ff9800 !important; }
+        .medium { color: #2196F3 !important; }
+        
+        .content {
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .section.enrichment {
+            background: linear-gradient(to right, #f0f4ff, #f9f9f9);
+            border-left-color: #4caf50;
+        }
+        .section h2 {
+            font-size: 20px;
+            margin: 0 0 15px 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .section h2 .icon {
+            font-size: 24px;
+        }
+        .threat-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .threat-item.critical {
+            border-left-color: #ff4444;
+            background: #fff5f5;
+        }
+        .threat-item.high {
+            border-left-color: #ff9800;
+            background: #fff9f0;
+        }
+        .threat-item.medium {
+            border-left-color: #2196F3;
+        }
+        .threat-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .threat-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .threat-list li {
+            padding: 10px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .threat-list li:before {
+            content: "▸";
+            position: absolute;
+            left: 5px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .cve-item {
+            background: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 3px solid #ff4444;
+        }
+        .cve-header {
+            font-weight: 600;
+            color: #d32f2f;
+            margin-bottom: 5px;
+        }
+        .control-list {
+            list-style: none;
+            padding: 0;
+        }
+        .control-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .control-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        .actor-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ff4444;
+        }
+        .actor-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #d32f2f;
+            margin-bottom: 10px;
+        }
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .risk-badge.critical {
+            background: #ff4444;
+            color: white;
+        }
+        .risk-badge.high {
+            background: #ff9800;
+            color: white;
+        }
+        .footer {
+            background: #333;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🛡️ {{ industry_name }} Threat Intelligence</h1>
+            <p>{{ date }} | Powered by cyber-pi & Nexum</p>
+            <span class="enriched-badge">✨ ENRICHED WITH EXPERT ANALYSIS</span>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="summary">
+            <div class="summary-card">
+                <h3 class="critical">{{ critical_count }}</h3>
+                <p>Critical Threats</p>
+            </div>
+            <div class="summary-card">
+                <h3 class="high">{{ high_count }}</h3>
+                <p>High Priority</p>
+            </div>
+            <div class="summary-card">
+                <h3 class="medium">{{ medium_count }}</h3>
+                <p>Medium Priority</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ total_count }}</h3>
+                <p>Total Threats</p>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Executive Summary -->
+            <div class="section">
+                <h2><span class="icon">📊</span> Executive Summary</h2>
+                <p>{{ executive_summary|safe }}</p>
+            </div>
+            
+            <!-- ENRICHMENT: Threat Landscape -->
+            {% if threat_landscape %}
+            <div class="section enrichment">
+                <h2><span class="icon">🌍</span> Threat Landscape Analysis - Q4 2025 <span class="risk-badge {{ threat_landscape.risk_level|lower }}">{{ threat_landscape.risk_level }}</span></h2>
+                
+                <h3>Top Threats This Quarter:</h3>
+                <ul class="threat-list">
+                    {% for threat in threat_landscape.top_threats %}
+                    <li>{{ threat }}</li>
+                    {% endfor %}
+                </ul>
+                
+                <h3 style="margin-top: 20px;">Current Trend:</h3>
+                <p><strong>{{ threat_landscape.current_trend }}</strong></p>
+                
+                {% if threat_landscape.recent_incidents %}
+                <h3 style="margin-top: 20px;">Recent Incidents:</h3>
+                <ul class="threat-list">
+                    {% for incident in threat_landscape.recent_incidents %}
+                    <li>{{ incident }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- ENRICHMENT: Threat Actor Spotlight -->
+            {% if threat_actor and threat_actor.name %}
+            <div class="section enrichment">
+                <h2><span class="icon">🎯</span> Threat Actor Spotlight</h2>
+                <div class="actor-box">
+                    <div class="actor-name">{{ threat_actor.name }}</div>
+                    <p><strong>Targets:</strong> {{ threat_actor.targets }}</p>
+                    <p><strong>Recent Activity:</strong> {{ threat_actor.recent_activity }}</p>
+                    <p><strong>TTPs:</strong> {{ threat_actor.ttps }}</p>
+                    {% if threat_actor.dwell_time %}
+                    <p><strong>Average Dwell Time:</strong> {{ threat_actor.dwell_time }}</p>
+                    {% endif %}
+                    {% if threat_actor.demand_range %}
+                    <p><strong>Ransom Demands:</strong> {{ threat_actor.demand_range }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Critical Threats -->
+            {% if critical_threats %}
+            <div class="section">
+                <h2><span class="icon">🚨</span> Critical Threats</h2>
+                {% for threat in critical_threats %}
+                <div class="threat-item critical">
+                    <div class="threat-title">{{ threat.title }}</div>
+                    {% if threat.description %}
+                    <div class="threat-desc">{{ threat.description }}</div>
+                    {% endif %}
+                    <div style="margin-top: 10px;">
+                        <strong>Score:</strong> <span class="critical">{{ threat.relevance_score }}</span> | 
+                        <strong>Source:</strong> {{ threat.source }}
+                        {% if threat.published_date %} | <strong>Date:</strong> {{ threat.published_date[:10] }}{% endif %}
+                    </div>
+                    {% if threat.match_reasons %}
+                    <div style="margin-top: 10px;">
+                        {% for reason in threat.match_reasons[:3] %}
+                        <span style="background: #ffe0e0; padding: 4px 8px; border-radius: 4px; margin-right: 8px; font-size: 12px;">{{ reason }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if threat.link %}
+                    <a href="{{ threat.link }}" style="display: inline-block; margin-top: 10px; color: #667eea;">View Details →</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- ENRICHMENT: Critical Vulnerabilities -->
+            {% if vulnerabilities %}
+            <div class="section enrichment">
+                <h2><span class="icon">🔐</span> Critical Vulnerabilities Affecting Your Stack</h2>
+                {% for vuln in vulnerabilities %}
+                <div class="cve-item">
+                    <div class="cve-header">{{ vuln.cve }} - {{ vuln.vendor }} ({{ vuln.severity }})</div>
+                    <p>{{ vuln.description }}</p>
+                    <p><strong>Status:</strong> {{ vuln.status }}</p>
+                </div>
+                {% endfor %}
+                
+                <h3 style="margin-top: 20px;">Recommended Actions:</h3>
+                <ul class="control-list">
+                    <li>Patch critical systems immediately and test in development first</li>
+                    <li>Review vendor security advisories weekly</li>
+                    <li>Monitor exploit databases for active exploitation</li>
+                </ul>
+            </div>
+            {% endif %}
+            
+            <!-- ENRICHMENT: Recommended Security Controls -->
+            {% if security_controls %}
+            <div class="section enrichment">
+                <h2><span class="icon">🛡️</span> Recommended Security Controls</h2>
+                
+                {% if security_controls.critical %}
+                <h3>🔴 Critical (Do This Week):</h3>
+                <ul class="control-list">
+                    {% for control in security_controls.critical %}
+                    <li>{{ control }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                
+                {% if security_controls.high %}
+                <h3 style="margin-top: 20px;">🟠 High Priority (This Month):</h3>
+                <ul class="control-list">
+                    {% for control in security_controls.high %}
+                    <li>{{ control }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                
+                {% if security_controls.medium %}
+                <h3 style="margin-top: 20px;">🟢 Medium Priority (This Quarter):</h3>
+                <ul class="control-list">
+                    {% for control in security_controls.medium %}
+                    <li>{{ control }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- ENRICHMENT: Industry Statistics -->
+            {% if statistics %}
+            <div class="section enrichment">
+                <h2><span class="icon">📈</span> Industry Security Metrics</h2>
+                
+                <div class="stat-grid">
+                    {% if statistics.breach_rate %}
+                    <div class="stat-box">
+                        <div class="stat-label">Breach Rate</div>
+                        <div class="stat-value">{{ statistics.breach_rate }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if statistics.average_cost %}
+                    <div class="stat-box">
+                        <div class="stat-label">Average Cost</div>
+                        <div class="stat-value">{{ statistics.average_cost }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if statistics.dwell_time %}
+                    <div class="stat-box">
+                        <div class="stat-label">Mean Dwell Time</div>
+                        <div class="stat-value">{{ statistics.dwell_time }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if statistics.primary_vector %}
+                    <div class="stat-box">
+                        <div class="stat-label">Primary Vector</div>
+                        <div class="stat-value" style="font-size: 16px;">{{ statistics.primary_vector }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if statistics.risk_multipliers %}
+                <h3 style="margin-top: 20px;">Your Risk Profile:</h3>
+                <ul class="threat-list">
+                    {% for risk in statistics.risk_multipliers %}
+                    <li>{{ risk }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- ENRICHMENT: Compliance Updates -->
+            {% if compliance_intel %}
+            <div class="section enrichment">
+                <h2><span class="icon">📋</span> Compliance & Regulatory Updates</h2>
+                {% for item in compliance_intel %}
+                <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 3px solid #2196F3;">
+                    <strong>{{ item.framework }}</strong>
+                    {% if item.deadline %}
+                    <span style="float: right; color: #ff9800;">⏰ {{ item.deadline }}</span>
+                    {% endif %}
+                    <p style="margin: 5px 0 0 0;">{{ item.requirement }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- High Priority Threats (if any) -->
+            {% if high_priority_threats %}
+            <div class="section">
+                <h2><span class="icon">⚠️</span> High Priority Threats</h2>
+                {% for threat in high_priority_threats[:5] %}
+                <div class="threat-item high">
+                    <div class="threat-title">{{ threat.title }}</div>
+                    <div style="margin-top: 10px;">
+                        <strong>Score:</strong> <span class="high">{{ threat.relevance_score }}</span> | 
+                        <strong>Source:</strong> {{ threat.source }}
+                    </div>
+                    {% if threat.link %}
+                    <a href="{{ threat.link }}" style="display: inline-block; margin-top: 10px; color: #667eea;">View Details →</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>cyber-pi Threat Intelligence Platform</strong></p>
+            <p>Enriched with expert analysis • Tailored for {{ industry_name }}</p>
+            <p style="margin-top: 15px; opacity: 0.7;">Powered by Nexum | Confidential</p>
+        </div>
+    </div>
+</body>
+</html>

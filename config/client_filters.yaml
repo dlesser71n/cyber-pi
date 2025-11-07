@@ -1,0 +1,1236 @@
+# Client-Specific Intelligence Filters for Nexum Partners
+# Each client gets customized threat intelligence based on their industry
+
+# ============================================================================
+# AVIATION / AIRLINES
+# ============================================================================
+aviation:
+  name: "Aviation & Airlines"
+  description: "Flight operations, ATC, passenger systems, airport infrastructure"
+  priority_level: critical
+  
+  # Keywords that trigger relevance
+  keywords:
+    critical:
+      - flight
+      - aircraft
+      - airline
+      - airport
+      - ATC
+      - air traffic
+      - aviation
+      - FAA
+      - ICAO
+      - ACARS
+      - passenger
+      - booking system
+      - reservation
+      - crew
+      
+    high:
+      - travel
+      - ticket
+      - baggage
+      - check-in
+      - gate
+      - runway
+      - pilot
+      - cockpit
+      - maintenance
+      
+    medium:
+      - transport
+      - logistics
+      - cargo
+      - freight
+      
+  # Threat types most relevant
+  threat_types:
+    critical:
+      - ransomware
+      - DDoS
+      - system outage
+      - operational disruption
+      
+    high:
+      - data breach
+      - PII exposure
+      - payment fraud
+      - insider threat
+      
+    medium:
+      - phishing
+      - malware
+      - vulnerability
+      
+  # Specific CVEs/vulnerabilities to watch
+  watch_vendors:
+    - Sabre
+    - Amadeus
+    - Travelport
+    - Boeing
+    - Airbus
+    - Honeywell
+    - Collins Aerospace
+    
+  # Compliance frameworks
+  compliance:
+    - TSA
+    - FAA regulations
+    - GDPR (EU flights)
+    - PCI DSS (payments)
+
+# ============================================================================
+# ENERGY / POWER COMPANIES
+# ============================================================================
+energy:
+  name: "Energy & Utilities"
+  description: "Power grid, generation, transmission, SCADA/ICS systems"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - power grid
+      - electric
+      - electricity
+      - substation
+      - transformer
+      - SCADA
+      - ICS
+      - OT
+      - operational technology
+      - generation
+      - transmission
+      - distribution
+      - smart grid
+      - utility
+      
+    high:
+      - energy
+      - power plant
+      - nuclear
+      - hydroelectric
+      - renewable
+      - solar
+      - wind
+      - coal
+      - natural gas
+      - control system
+      - HMI
+      - PLC
+      - RTU
+      
+    medium:
+      - infrastructure
+      - critical infrastructure
+      - NERC CIP
+      - grid stability
+      
+  threat_types:
+    critical:
+      - ICS attack
+      - SCADA exploit
+      - APT
+      - nation-state
+      - operational disruption
+      - physical damage
+      
+    high:
+      - ransomware
+      - malware
+      - insider threat
+      - supply chain
+      
+    medium:
+      - vulnerability
+      - phishing
+      - social engineering
+      
+  watch_vendors:
+    - Siemens
+    - Schneider Electric
+    - ABB
+    - General Electric
+    - Honeywell
+    - Rockwell Automation
+    - Emerson
+    
+  compliance:
+    - NERC CIP
+    - TSA pipeline security
+    - ICS-CERT advisories
+
+# ============================================================================
+# HEALTHCARE / HOSPITALS
+# ============================================================================
+healthcare:
+  name: "Healthcare & Hospitals"
+  description: "Patient care systems, EHR, medical devices, HIPAA compliance"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - hospital
+      - healthcare
+      - medical
+      - patient
+      - EHR
+      - EMR
+      - electronic health
+      - HIPAA
+      - PHI
+      - medical device
+      - clinical
+      - Epic
+      - Cerner
+      - Meditech
+      
+    high:
+      - health system
+      - clinic
+      - doctor
+      - nurse
+      - pharmacy
+      - lab
+      - radiology
+      - imaging
+      - surgical
+      - ICU
+      - emergency
+      - ambulance
+      
+    medium:
+      - healthcare provider
+      - medical records
+      - billing
+      - insurance
+      - telehealth
+      
+  threat_types:
+    critical:
+      - ransomware
+      - patient safety
+      - medical device exploit
+      - EHR breach
+      - operational disruption
+      
+    high:
+      - data breach
+      - PHI exposure
+      - HIPAA violation
+      - insider threat
+      
+    medium:
+      - phishing
+      - malware
+      - vulnerability
+      
+  watch_vendors:
+    - Epic Systems
+    - Cerner
+    - Meditech
+    - Philips Healthcare
+    - GE Healthcare
+    - Siemens Healthineers
+    - McKesson
+    
+  compliance:
+    - HIPAA
+    - HITECH
+    - FDA medical device
+    - Joint Commission
+
+# ============================================================================
+# GOVERNMENT / PUBLIC SECTOR
+# ============================================================================
+government:
+  name: "Government & Public Sector"
+  description: "Federal, state, local government systems and services"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - government
+      - federal
+      - state
+      - municipal
+      - public sector
+      - .gov
+      - classified
+      - national security
+      - defense
+      - intelligence
+      
+    high:
+      - agency
+      - department
+      - ministry
+      - congress
+      - senate
+      - election
+      - voting
+      - census
+      - DMV
+      - social security
+      
+    medium:
+      - public service
+      - citizen data
+      - tax
+      - benefits
+      
+  threat_types:
+    critical:
+      - APT
+      - nation-state
+      - espionage
+      - election interference
+      - classified data breach
+      
+    high:
+      - ransomware
+      - DDoS
+      - data breach
+      - insider threat
+      
+    medium:
+      - phishing
+      - malware
+      - vulnerability
+      
+  watch_vendors:
+    - Microsoft (government contracts)
+    - Amazon (AWS GovCloud)
+    - Oracle
+    - SAP
+    - Cisco
+    
+  compliance:
+    - FedRAMP
+    - FISMA
+    - NIST frameworks
+    - CISA directives
+
+# ============================================================================
+# FINANCIAL SERVICES
+# ============================================================================
+financial:
+  name: "Financial Services & Banking"
+  description: "Banks, credit unions, payment processors, fintech"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - bank
+      - financial
+      - payment
+      - credit card
+      - debit card
+      - ATM
+      - wire transfer
+      - SWIFT
+      - trading
+      - stock exchange
+      - cryptocurrency
+      - wallet
+      
+    high:
+      - fintech
+      - mobile banking
+      - online banking
+      - fraud
+      - transaction
+      - account
+      - PCI DSS
+      
+    medium:
+      - loan
+      - mortgage
+      - investment
+      - insurance
+      
+  threat_types:
+    critical:
+      - fraud
+      - payment card breach
+      - wire fraud
+      - account takeover
+      - insider trading
+      
+    high:
+      - ransomware
+      - DDoS
+      - malware
+      - phishing
+      
+    medium:
+      - vulnerability
+      - social engineering
+      
+  watch_vendors:
+    - Visa
+    - Mastercard
+    - FIS
+    - Fiserv
+    - Jack Henry
+    - NCR
+    
+  compliance:
+    - PCI DSS
+    - SOX
+    - GLBA
+    - FFIEC
+
+# ============================================================================
+# EDUCATION / UNIVERSITIES
+# ============================================================================
+education:
+  name: "Education & Universities"
+  description: "K-12 schools, universities, research institutions"
+  priority_level: high
+  
+  keywords:
+    critical:
+      - university
+      - college
+      - school
+      - education
+      - student
+      - faculty
+      - research
+      - academic
+      
+    high:
+      - campus
+      - enrollment
+      - tuition
+      - degree
+      - learning management
+      - Blackboard
+      - Canvas
+      
+    medium:
+      - K-12
+      - scholarship
+      - library
+      
+  threat_types:
+    critical:
+      - ransomware
+      - research data breach
+      - student data breach
+      
+    high:
+      - DDoS
+      - credential theft
+      - insider threat
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - Blackboard
+    - Canvas
+    - Ellucian
+    - PeopleSoft
+    
+  compliance:
+    - FERPA
+    - COPPA (if K-12)
+
+# ============================================================================
+# MANUFACTURING
+# ============================================================================
+manufacturing:
+  name: "Manufacturing & Industrial"
+  description: "Production facilities, supply chain, OT/ICS systems"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - manufacturing
+      - factory
+      - production
+      - assembly line
+      - supply chain
+      - OT
+      - operational technology
+      - ICS
+      - SCADA
+      - PLC
+      - industrial control
+      - automation
+      - robotics
+      
+    high:
+      - inventory
+      - ERP
+      - SAP
+      - Oracle
+      - warehouse
+      - logistics
+      - procurement
+      - vendor
+      - supplier
+      - CAD
+      - CAM
+      
+    medium:
+      - quality control
+      - production line
+      - machinery
+      
+  threat_types:
+    critical:
+      - ransomware
+      - supply chain attack
+      - ICS exploit
+      - operational disruption
+      - intellectual property theft
+      
+    high:
+      - malware
+      - insider threat
+      - vendor compromise
+      
+    medium:
+      - phishing
+      - vulnerability
+      
+  watch_vendors:
+    - Siemens
+    - Rockwell Automation
+    - Schneider Electric
+    - SAP
+    - Oracle
+    - Honeywell
+    
+  compliance:
+    - ISO 27001
+    - NIST Cybersecurity Framework
+    - ICS-CERT advisories
+
+# ============================================================================
+# RETAIL / E-COMMERCE
+# ============================================================================
+retail:
+  name: "Retail & E-Commerce"
+  description: "Point of sale, e-commerce platforms, customer data"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - retail
+      - e-commerce
+      - point of sale
+      - POS
+      - payment
+      - credit card
+      - customer data
+      - shopping
+      - online store
+      - checkout
+      - magento
+      - shopify
+      - woocommerce
+      
+    high:
+      - inventory
+      - merchandise
+      - loyalty program
+      - rewards
+      - customer account
+      - order
+      - fulfillment
+      
+    medium:
+      - storefront
+      - catalog
+      - product
+      
+  threat_types:
+    critical:
+      - POS malware
+      - payment card breach
+      - e-commerce exploit
+      - customer data breach
+      - fraud
+      
+    high:
+      - ransomware
+      - web skimming
+      - magecart
+      - formjacking
+      
+    medium:
+      - phishing
+      - credential theft
+      
+  watch_vendors:
+    - Shopify
+    - Magento/Adobe Commerce
+    - Oracle Retail
+    - SAP Retail
+    - Square
+    - Verifone
+    
+  compliance:
+    - PCI DSS
+    - GDPR
+    - CCPA
+    - SOX (if public)
+
+# ============================================================================
+# TECHNOLOGY / SOFTWARE
+# ============================================================================
+technology:
+  name: "Technology & Software"
+  description: "Software companies, SaaS, cloud services, IT infrastructure"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - software
+      - SaaS
+      - cloud
+      - API
+      - source code
+      - git
+      - github
+      - repository
+      - intellectual property
+      - development
+      - production
+      - CI/CD
+      - DevOps
+      
+    high:
+      - application
+      - platform
+      - infrastructure
+      - kubernetes
+      - docker
+      - AWS
+      - Azure
+      - GCP
+      - database
+      - microservices
+      
+    medium:
+      - technology
+      - IT
+      - software development
+      
+  threat_types:
+    critical:
+      - supply chain attack
+      - source code theft
+      - API exploit
+      - zero-day
+      - cloud breach
+      
+    high:
+      - ransomware
+      - DDoS
+      - insider threat
+      - credential theft
+      
+    medium:
+      - vulnerability
+      - misconfiguration
+      
+  watch_vendors:
+    - AWS
+    - Microsoft Azure
+    - Google Cloud
+    - GitHub
+    - GitLab
+    - Docker
+    - Kubernetes
+    
+  compliance:
+    - SOC 2
+    - ISO 27001
+    - GDPR
+    - CCPA
+
+# ============================================================================
+# TELECOMMUNICATIONS
+# ============================================================================
+telecommunications:
+  name: "Telecommunications"
+  description: "Network infrastructure, mobile carriers, ISPs"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - telecommunications
+      - telecom
+      - mobile network
+      - 5G
+      - cellular
+      - carrier
+      - ISP
+      - internet service
+      - network infrastructure
+      - BGP
+      - SS7
+      - VoIP
+      - subscriber
+      
+    high:
+      - roaming
+      - billing
+      - network management
+      - base station
+      - tower
+      - spectrum
+      
+    medium:
+      - telephony
+      - broadband
+      - fiber
+      
+  threat_types:
+    critical:
+      - network breach
+      - BGP hijacking
+      - SS7 exploit
+      - subscriber data breach
+      - infrastructure attack
+      
+    high:
+      - DDoS
+      - ransomware
+      - fraud
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - Cisco
+    - Nokia
+    - Ericsson
+    - Huawei
+    - Juniper
+    
+  compliance:
+    - CALEA
+    - FCC regulations
+    - GDPR
+
+# ============================================================================
+# PHARMACEUTICALS / LIFE SCIENCES
+# ============================================================================
+pharmaceuticals:
+  name: "Pharmaceuticals & Life Sciences"
+  description: "Drug research, clinical trials, FDA compliance"
+  priority_level: critical
+  
+  keywords:
+    critical:
+      - pharmaceutical
+      - drug
+      - clinical trial
+      - FDA
+      - research
+      - biotech
+      - life sciences
+      - medical research
+      - laboratory
+      - vaccine
+      - therapy
+      
+    high:
+      - patent
+      - intellectual property
+      - formula
+      - compound
+      - manufacturing
+      - quality control
+      - GxP
+      
+    medium:
+      - medicine
+      - treatment
+      - prescription
+      
+  threat_types:
+    critical:
+      - intellectual property theft
+      - research data breach
+      - nation-state espionage
+      - supply chain attack
+      
+    high:
+      - ransomware
+      - insider threat
+      - data breach
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - SAP
+    - Oracle
+    - Veeva
+    - LabWare
+    
+  compliance:
+    - FDA 21 CFR Part 11
+    - HIPAA
+    - GxP
+    - GDPR
+
+# ============================================================================
+# INSURANCE
+# ============================================================================
+insurance:
+  name: "Insurance"
+  description: "Underwriting, claims, customer data, actuarial systems"
+  priority_level: high
+  
+  keywords:
+    critical:
+      - insurance
+      - underwriting
+      - claims
+      - policy
+      - policyholder
+      - actuarial
+      - premium
+      - coverage
+      - insurer
+      
+    high:
+      - benefits
+      - enrollment
+      - broker
+      - agent
+      - reinsurance
+      - loss
+      
+    medium:
+      - life insurance
+      - health insurance
+      - property insurance
+      
+  threat_types:
+    critical:
+      - customer data breach
+      - fraud
+      - claims manipulation
+      
+    high:
+      - ransomware
+      - phishing
+      - business email compromise
+      
+    medium:
+      - malware
+      - vulnerability
+      
+  watch_vendors:
+    - Guidewire
+    - Duck Creek
+    - Applied Systems
+    - Vertafore
+    
+  compliance:
+    - GLBA
+    - HIPAA (health insurance)
+    - SOX (if public)
+    - State insurance regulations
+
+# ============================================================================
+# AUTOMOTIVE
+# ============================================================================
+automotive:
+  name: "Automotive"
+  description: "Vehicle manufacturing, connected cars, autonomous systems"
+  priority_level: high
+  
+  keywords:
+    critical:
+      - automotive
+      - vehicle
+      - car
+      - connected vehicle
+      - autonomous
+      - self-driving
+      - CAN bus
+      - ECU
+      - infotainment
+      - telematics
+      
+    high:
+      - manufacturing
+      - assembly
+      - supply chain
+      - dealer
+      - OEM
+      - OTA update
+      
+    medium:
+      - automobile
+      - fleet
+      - mobility
+      
+  threat_types:
+    critical:
+      - vehicle hacking
+      - connected car exploit
+      - OTA update compromise
+      - supply chain attack
+      
+    high:
+      - ransomware
+      - intellectual property theft
+      - dealer network breach
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - Continental
+    - Bosch
+    - Denso
+    - Aptiv
+    - Tesla
+    
+  compliance:
+    - ISO 26262
+    - UNECE WP.29
+    - NHTSA guidelines
+
+# ============================================================================
+# MEDIA / ENTERTAINMENT
+# ============================================================================
+media:
+  name: "Media & Entertainment"
+  description: "Streaming, content distribution, production, broadcasting"
+  priority_level: medium
+  
+  keywords:
+    critical:
+      - streaming
+      - content
+      - broadcast
+      - media
+      - entertainment
+      - video
+      - production
+      - studio
+      - CDN
+      - DRM
+      
+    high:
+      - subscriber
+      - viewer
+      - copyright
+      - piracy
+      - distribution
+      - licensing
+      
+    medium:
+      - film
+      - television
+      - music
+      
+  threat_types:
+    critical:
+      - content leak
+      - DDoS
+      - piracy
+      - subscriber data breach
+      
+    high:
+      - ransomware
+      - credential theft
+      - account takeover
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - Akamai
+    - Cloudflare
+    - AWS Media Services
+    - Brightcove
+    
+  compliance:
+    - GDPR
+    - CCPA
+    - DMCA
+
+# ============================================================================
+# HOSPITALITY / TRAVEL
+# ============================================================================
+hospitality:
+  name: "Hospitality & Travel"
+  description: "Hotels, resorts, travel booking, tourism"
+  priority_level: medium
+  
+  keywords:
+    critical:
+      - hotel
+      - resort
+      - hospitality
+      - travel
+      - booking
+      - reservation
+      - guest
+      - room
+      - property management
+      - PMS
+      
+    high:
+      - check-in
+      - loyalty
+      - rewards
+      - casino
+      - restaurant
+      - tourism
+      
+    medium:
+      - accommodation
+      - lodging
+      - vacation
+      
+  threat_types:
+    critical:
+      - POS malware
+      - guest data breach
+      - payment card theft
+      - ransomware
+      
+    high:
+      - credential theft
+      - fraud
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - Oracle Hospitality
+    - Sabre Hospitality
+    - Amadeus
+    - Infor HMS
+    
+  compliance:
+    - PCI DSS
+    - GDPR
+    - CCPA
+
+# ============================================================================
+# PROFESSIONAL SERVICES / LEGAL
+# ============================================================================
+professional_services:
+  name: "Professional Services & Legal"
+  description: "Law firms, consulting, accounting, advisory"
+  priority_level: high
+  
+  keywords:
+    critical:
+      - law firm
+      - legal
+      - attorney
+      - consulting
+      - advisory
+      - accounting
+      - audit
+      - client data
+      - confidential
+      - privileged
+      
+    high:
+      - case management
+      - document management
+      - contract
+      - compliance
+      - due diligence
+      
+    medium:
+      - professional services
+      - consulting firm
+      
+  threat_types:
+    critical:
+      - client data breach
+      - ransomware
+      - business email compromise
+      - intellectual property theft
+      
+    high:
+      - phishing
+      - credential theft
+      - insider threat
+      
+    medium:
+      - malware
+      - vulnerability
+      
+  watch_vendors:
+    - Thomson Reuters
+    - LexisNexis
+    - Clio
+    - Microsoft 365
+    
+  compliance:
+    - Attorney-client privilege
+    - SOX (for accounting)
+    - GDPR
+    - State bar regulations
+
+# ============================================================================
+# TRANSPORTATION / LOGISTICS
+# ============================================================================
+transportation:
+  name: "Transportation & Logistics"
+  description: "Shipping, freight, logistics, fleet management"
+  priority_level: high
+  
+  keywords:
+    critical:
+      - transportation
+      - logistics
+      - shipping
+      - freight
+      - supply chain
+      - delivery
+      - fleet
+      - warehouse
+      - cargo
+      - port
+      
+    high:
+      - tracking
+      - route
+      - driver
+      - vehicle
+      - dispatch
+      - customs
+      
+    medium:
+      - courier
+      - parcel
+      - last mile
+      
+  threat_types:
+    critical:
+      - GPS spoofing
+      - fleet compromise
+      - supply chain attack
+      - ransomware
+      
+    high:
+      - tracking system breach
+      - cargo theft
+      - fraud
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - Oracle Transportation
+    - SAP TM
+    - Manhattan Associates
+    - JDA Software
+    
+  compliance:
+    - TSA regulations
+    - Customs regulations
+    - GDPR
+
+# ============================================================================
+# REAL ESTATE
+# ============================================================================
+real_estate:
+  name: "Real Estate"
+  description: "Property management, REITs, commercial real estate"
+  priority_level: medium
+  
+  keywords:
+    critical:
+      - real estate
+      - property management
+      - REIT
+      - commercial property
+      - building management
+      - tenant
+      - lease
+      
+    high:
+      - property
+      - building
+      - facility
+      - smart building
+      - BMS
+      - access control
+      
+    medium:
+      - residential
+      - office
+      - retail space
+      
+  threat_types:
+    critical:
+      - BMS exploit
+      - tenant data breach
+      - ransomware
+      
+    high:
+      - access control breach
+      - fraud
+      
+    medium:
+      - phishing
+      - malware
+      
+  watch_vendors:
+    - Yardi
+    - RealPage
+    - MRI Software
+    - Honeywell Building Solutions
+    
+  compliance:
+    - GDPR
+    - CCPA
+    - Local privacy laws
+
+# ============================================================================
+# FILTER SETTINGS
+# ============================================================================
+filter_settings:
+  # Scoring weights
+  scoring:
+    keyword_match_critical: 10
+    keyword_match_high: 5
+    keyword_match_medium: 2
+    threat_type_match_critical: 15
+    threat_type_match_high: 10
+    threat_type_match_medium: 5
+    vendor_match: 8
+    compliance_match: 6
+    
+  # Thresholds
+  thresholds:
+    include_in_report: 10  # Minimum score to include
+    flag_as_critical: 30   # Score to flag as critical alert
+    
+  # Report customization
+  report_sections:
+    - executive_summary
+    - critical_threats
+    - industry_specific_threats
+    - vendor_advisories
+    - compliance_updates
+    - threat_landscape
+    - recommendations

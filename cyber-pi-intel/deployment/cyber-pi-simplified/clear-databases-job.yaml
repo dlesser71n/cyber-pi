@@ -1,0 +1,89 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: clear-databases
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: clearer
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "Installing dependencies..."
+            pip install --quiet weaviate-client neo4j redis
+
+            echo "Clearing Weaviate..."
+            python3 << 'PYTHON'
+            import weaviate
+            import weaviate.classes as wvc
+
+            client = weaviate.connect_to_custom(
+                http_host="weaviate.cyber-pi-intel.svc.cluster.local",
+                http_port=8080,
+                http_secure=False,
+                grpc_host="weaviate.cyber-pi-intel.svc.cluster.local",
+                grpc_port=50051,
+                grpc_secure=False
+            )
+
+            collection = client.collections.get("CyberThreatIntelligence")
+
+            # Delete all objects
+            result = collection.data.delete_many(
+                where=wvc.query.Filter.by_property("threatId").like("*")
+            )
+            print(f"Deleted {result.successful} objects from Weaviate")
+
+            client.close()
+            PYTHON
+
+            echo "Clearing Neo4j..."
+            python3 << 'PYTHON2'
+            from neo4j import GraphDatabase
+
+            driver = GraphDatabase.driver(
+                "bolt://neo4j.cyber-pi-intel.svc.cluster.local:7687",
+                auth=("neo4j", "cyber-pi-neo4j-2025")
+            )
+
+            with driver.session() as session:
+                result = session.run("MATCH (t:CyberThreat) DETACH DELETE t RETURN count(*) as deleted")
+                record = result.single()
+                print(f"Deleted {record['deleted']} nodes from Neo4j")
+
+            driver.close()
+            PYTHON2
+
+            echo "Clearing Redis queues..."
+            python3 << 'PYTHON3'
+            import redis.asyncio as redis
+            import asyncio
+
+            async def clear_redis():
+                client = await redis.from_url(
+                    "redis://:cyber-pi-redis-2025@redis.cyber-pi-intel.svc.cluster.local:6379",
+                    encoding="utf-8",
+                    decode_responses=True
+                )
+
+                # Delete queues
+                await client.delete("queue:weaviate")
+                await client.delete("queue:neo4j")
+
+                # Delete all parsed threats
+                keys = await client.keys("threat:parsed:*")
+                if keys:
+                    await client.delete(*keys)
+                    print(f"Deleted {len(keys)} parsed threats from Redis")
+
+                await client.aclose()
+
+            asyncio.run(clear_redis())
+            PYTHON3
+
+            echo "✅ All databases cleared"

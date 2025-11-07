@@ -1,0 +1,47 @@
+{
+  "cortex": {
+    "logging": {
+      "level": "DEBUG",
+      "showDetails": true,
+      "showTimestamps": true,
+      "showSourceLocation": true,
+      "colorize": true
+    },
+    "memory": {
+      "showMetrics": true,
+      "showPromotions": true,
+      "showCacheHits": true,
+      "showDecayOperations": true,
+      "verboseLogging": true
+    },
+    "testing": {
+      "verboseOutput": true,
+      "showAllAssertions": true,
+      "printIntermediateResults": true,
+      "showTimings": true
+    },
+    "redis": {
+      "logCommands": true,
+      "showConnectionDetails": true,
+      "logKeyOperations": true
+    },
+    "performance": {
+      "trackOperationTimes": true,
+      "showSlowQueries": true,
+      "logMemoryUsage": true
+    }
+  },
+  "python": {
+    "logging": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
+      "dateFormat": "%Y-%m-%d %H:%M:%S",
+      "level": "DEBUG"
+    }
+  },
+  "development": {
+    "mode": "debug",
+    "verboseErrors": true,
+    "showStackTraces": true,
+    "enableProfiling": false
+  }
+}

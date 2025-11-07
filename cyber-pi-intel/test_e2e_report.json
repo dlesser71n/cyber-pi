@@ -1,0 +1,625 @@
+{
+  "timestamp": "2025-11-02T15:38:50.047784+00:00",
+  "summary": {
+    "total": 102,
+    "passed": 96,
+    "failed": 3,
+    "skipped": 3,
+    "pass_rate": 94.11764705882352,
+    "status": "PARTIAL"
+  },
+  "tests": [
+    {
+      "name": "Python Version",
+      "status": "PASS",
+      "message": "Python 3.12",
+      "timestamp": "2025-11-02T15:38:44.526997+00:00"
+    },
+    {
+      "name": "File exists: backend/core/config.py",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527042+00:00"
+    },
+    {
+      "name": "File exists: backend/core/security.py",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527066+00:00"
+    },
+    {
+      "name": "File exists: backend/core/validators.py",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527084+00:00"
+    },
+    {
+      "name": "File exists: backend/core/connections.py",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527102+00:00"
+    },
+    {
+      "name": "File exists: backend/api/threat_intel_api.py",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527119+00:00"
+    },
+    {
+      "name": "File exists: .env.example",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527135+00:00"
+    },
+    {
+      "name": "File exists: SECURITY.md",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527154+00:00"
+    },
+    {
+      "name": "File exists: run_security_tests.sh",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.527170+00:00"
+    },
+    {
+      "name": "Import settings",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.814893+00:00"
+    },
+    {
+      "name": "Config: environment",
+      "status": "PASS",
+      "message": "development",
+      "timestamp": "2025-11-02T15:38:44.814924+00:00"
+    },
+    {
+      "name": "Config: debug",
+      "status": "PASS",
+      "message": "True",
+      "timestamp": "2025-11-02T15:38:44.814943+00:00"
+    },
+    {
+      "name": "Config: api_host",
+      "status": "PASS",
+      "message": "0.0.0.0",
+      "timestamp": "2025-11-02T15:38:44.814956+00:00"
+    },
+    {
+      "name": "Config: api_port",
+      "status": "PASS",
+      "message": "8000",
+      "timestamp": "2025-11-02T15:38:44.814969+00:00"
+    },
+    {
+      "name": "Config: redis_host",
+      "status": "PASS",
+      "message": "localhost",
+      "timestamp": "2025-11-02T15:38:44.814981+00:00"
+    },
+    {
+      "name": "Config: neo4j_uri",
+      "status": "PASS",
+      "message": "bolt://localhost:7687",
+      "timestamp": "2025-11-02T15:38:44.814993+00:00"
+    },
+    {
+      "name": "Config: weaviate_url",
+      "status": "PASS",
+      "message": "http://localhost:8080",
+      "timestamp": "2025-11-02T15:38:44.815005+00:00"
+    },
+    {
+      "name": "Config: jwt_secret_key",
+      "status": "PASS",
+      "message": "**********",
+      "timestamp": "2025-11-02T15:38:44.815019+00:00"
+    },
+    {
+      "name": "Config: cors_origins",
+      "status": "PASS",
+      "message": "['http://localhost:3000', 'http://localhost:8000', 'http://tqakb.local']",
+      "timestamp": "2025-11-02T15:38:44.815034+00:00"
+    },
+    {
+      "name": "Security validation method",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:44.815045+00:00"
+    },
+    {
+      "name": "Development mode check",
+      "status": "PASS",
+      "message": "Running in development",
+      "timestamp": "2025-11-02T15:38:44.815054+00:00"
+    },
+    {
+      "name": "Import InputValidator",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096151+00:00"
+    },
+    {
+      "name": "CVE validation: CVE-2024-1234",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096184+00:00"
+    },
+    {
+      "name": "CVE validation: CVE-2023-12345",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096195+00:00"
+    },
+    {
+      "name": "Invalid CVE rejection: INVALID-CVE",
+      "status": "PASS",
+      "message": "Correctly rejected",
+      "timestamp": "2025-11-02T15:38:45.096211+00:00"
+    },
+    {
+      "name": "Invalid CVE rejection: CVE-ABC-123",
+      "status": "PASS",
+      "message": "Correctly rejected",
+      "timestamp": "2025-11-02T15:38:45.096228+00:00"
+    },
+    {
+      "name": "MITRE technique: T1234",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096242+00:00"
+    },
+    {
+      "name": "MITRE technique: T1234.001",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096251+00:00"
+    },
+    {
+      "name": "Severity validation: critical",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096260+00:00"
+    },
+    {
+      "name": "Severity validation: high",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096269+00:00"
+    },
+    {
+      "name": "Severity validation: medium",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096276+00:00"
+    },
+    {
+      "name": "Severity validation: low",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096283+00:00"
+    },
+    {
+      "name": "Severity validation: info",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096291+00:00"
+    },
+    {
+      "name": "Sanitize string: Normal string...",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096307+00:00"
+    },
+    {
+      "name": "Sanitize string: String with\u0000null...",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096325+00:00"
+    },
+    {
+      "name": "Sanitize string: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...",
+      "status": "FAIL",
+      "message": "Should have failed",
+      "timestamp": "2025-11-02T15:38:45.096340+00:00"
+    },
+    {
+      "name": "Neo4j param sanitize: ValidActorName",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096361+00:00"
+    },
+    {
+      "name": "Neo4j param sanitize: APT28",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096372+00:00"
+    },
+    {
+      "name": "Neo4j param sanitize: Lazarus-Group",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.096383+00:00"
+    },
+    {
+      "name": "Neo4j injection block: '; DROP TABLE--",
+      "status": "PASS",
+      "message": "Correctly blocked",
+      "timestamp": "2025-11-02T15:38:45.096396+00:00"
+    },
+    {
+      "name": "Neo4j injection block: MATCH (n) DELETE n",
+      "status": "PASS",
+      "message": "Correctly blocked",
+      "timestamp": "2025-11-02T15:38:45.096412+00:00"
+    },
+    {
+      "name": "Import security modules",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.460873+00:00"
+    },
+    {
+      "name": "Create SecurityManager",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.460906+00:00"
+    },
+    {
+      "name": "Password hashing",
+      "status": "PASS",
+      "message": "Hash length: 60",
+      "timestamp": "2025-11-02T15:38:45.731459+00:00"
+    },
+    {
+      "name": "Password verification",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:45.976264+00:00"
+    },
+    {
+      "name": "Wrong password rejection",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:46.224285+00:00"
+    },
+    {
+      "name": "JWT token creation",
+      "status": "PASS",
+      "message": "Token length: 268",
+      "timestamp": "2025-11-02T15:38:46.230035+00:00"
+    },
+    {
+      "name": "Security header: X-Content-Type-Options",
+      "status": "PASS",
+      "message": "nosniff",
+      "timestamp": "2025-11-02T15:38:46.230067+00:00"
+    },
+    {
+      "name": "Security header: X-Frame-Options",
+      "status": "PASS",
+      "message": "DENY",
+      "timestamp": "2025-11-02T15:38:46.230082+00:00"
+    },
+    {
+      "name": "Security header: X-XSS-Protection",
+      "status": "PASS",
+      "message": "1; mode=block",
+      "timestamp": "2025-11-02T15:38:46.230106+00:00"
+    },
+    {
+      "name": "Security header: Strict-Transport-Security",
+      "status": "PASS",
+      "message": "max-age=31536000; includeSubDomains",
+      "timestamp": "2025-11-02T15:38:46.230119+00:00"
+    },
+    {
+      "name": "Security header: Content-Security-Policy",
+      "status": "PASS",
+      "message": "default-src 'self'",
+      "timestamp": "2025-11-02T15:38:46.230131+00:00"
+    },
+    {
+      "name": "Import ConnectionManager",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820006+00:00"
+    },
+    {
+      "name": "Create ConnectionManager instance",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820037+00:00"
+    },
+    {
+      "name": "ConnectionManager.initialize()",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820049+00:00"
+    },
+    {
+      "name": "ConnectionManager.close()",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820059+00:00"
+    },
+    {
+      "name": "ConnectionManager.health_check()",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820067+00:00"
+    },
+    {
+      "name": "ConnectionManager.get_redis()",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820074+00:00"
+    },
+    {
+      "name": "ConnectionManager.get_neo4j()",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820082+00:00"
+    },
+    {
+      "name": "ConnectionManager.get_weaviate()",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:47.820089+00:00"
+    },
+    {
+      "name": "Type hints on get_neo4j",
+      "status": "PASS",
+      "message": "Return type: typing.Optional[neo4j._async.driver.AsyncDriver]",
+      "timestamp": "2025-11-02T15:38:47.820116+00:00"
+    },
+    {
+      "name": "Import threat_intel_api module",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815147+00:00"
+    },
+    {
+      "name": "FastAPI app exists",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815172+00:00"
+    },
+    {
+      "name": "App title",
+      "status": "PASS",
+      "message": "Cyber-PI-Intel API",
+      "timestamp": "2025-11-02T15:38:49.815182+00:00"
+    },
+    {
+      "name": "App version",
+      "status": "PASS",
+      "message": "1.0.0",
+      "timestamp": "2025-11-02T15:38:49.815196+00:00"
+    },
+    {
+      "name": "Middleware configured",
+      "status": "PASS",
+      "message": "2 middleware(s)",
+      "timestamp": "2025-11-02T15:38:49.815210+00:00"
+    },
+    {
+      "name": "Route exists: /",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815235+00:00"
+    },
+    {
+      "name": "Route exists: /health",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815244+00:00"
+    },
+    {
+      "name": "Route exists: /collect",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815251+00:00"
+    },
+    {
+      "name": "Route exists: /search",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815262+00:00"
+    },
+    {
+      "name": "Route exists: /threats",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815269+00:00"
+    },
+    {
+      "name": "Route exists: /analytics/summary",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815276+00:00"
+    },
+    {
+      "name": "Route exists: /actors",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815284+00:00"
+    },
+    {
+      "name": "Route exists: /campaigns",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815291+00:00"
+    },
+    {
+      "name": "Import Pydantic models",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815319+00:00"
+    },
+    {
+      "name": "ValidatedThreatQuery (valid)",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815394+00:00"
+    },
+    {
+      "name": "ValidatedThreatQuery (invalid - too long)",
+      "status": "PASS",
+      "message": "Correctly rejected",
+      "timestamp": "2025-11-02T15:38:49.815413+00:00"
+    },
+    {
+      "name": "ValidatedCollectionRequest (valid)",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815441+00:00"
+    },
+    {
+      "name": "ValidatedCollectionRequest (invalid source)",
+      "status": "PASS",
+      "message": "Correctly rejected",
+      "timestamp": "2025-11-02T15:38:49.815459+00:00"
+    },
+    {
+      "name": "File exists: SECURITY.md",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815509+00:00"
+    },
+    {
+      "name": "  Contains: Reporting a Vulnerability",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815572+00:00"
+    },
+    {
+      "name": "  Contains: Security Policy",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815591+00:00"
+    },
+    {
+      "name": "File exists: SECURITY_FIXES_APPLIED.md",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815610+00:00"
+    },
+    {
+      "name": "  Contains: Critical Fixes",
+      "status": "FAIL",
+      "message": "Content missing",
+      "timestamp": "2025-11-02T15:38:49.815682+00:00"
+    },
+    {
+      "name": "  Contains: Hardcoded Credentials",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815697+00:00"
+    },
+    {
+      "name": "File exists: SECURITY_ENHANCEMENTS_COMPLETE.md",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815712+00:00"
+    },
+    {
+      "name": "  Contains: Security Rating",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815756+00:00"
+    },
+    {
+      "name": "  Contains: Production Ready",
+      "status": "FAIL",
+      "message": "Content missing",
+      "timestamp": "2025-11-02T15:38:49.815774+00:00"
+    },
+    {
+      "name": "File exists: .bandit",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815793+00:00"
+    },
+    {
+      "name": "  Contains: bandit",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815823+00:00"
+    },
+    {
+      "name": "  Contains: tests",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815831+00:00"
+    },
+    {
+      "name": "File exists: run_security_tests.sh",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815846+00:00"
+    },
+    {
+      "name": "  Contains: bandit",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815879+00:00"
+    },
+    {
+      "name": "  Contains: safety",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815889+00:00"
+    },
+    {
+      "name": "  Contains: pip-audit",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:49.815897+00:00"
+    },
+    {
+      "name": "Initialize connections",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:50.041297+00:00"
+    },
+    {
+      "name": "Health check executed",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:50.046381+00:00"
+    },
+    {
+      "name": "  redis status",
+      "status": "SKIP",
+      "message": "Not available",
+      "timestamp": "2025-11-02T15:38:50.046406+00:00"
+    },
+    {
+      "name": "  neo4j status",
+      "status": "SKIP",
+      "message": "Not available",
+      "timestamp": "2025-11-02T15:38:50.046423+00:00"
+    },
+    {
+      "name": "  weaviate status",
+      "status": "SKIP",
+      "message": "Not available",
+      "timestamp": "2025-11-02T15:38:50.046434+00:00"
+    },
+    {
+      "name": "  ollama status",
+      "status": "PASS",
+      "message": "Connected",
+      "timestamp": "2025-11-02T15:38:50.046446+00:00"
+    },
+    {
+      "name": "Close connections",
+      "status": "PASS",
+      "message": "",
+      "timestamp": "2025-11-02T15:38:50.046703+00:00"
+    }
+  ]
+}

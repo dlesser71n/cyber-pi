@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{industry_name}} Threat Intelligence Report</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            padding: 30px 20px;
+            background: #f9f9f9;
+        }
+        .summary-card {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-card h3 {
+            margin: 0;
+            font-size: 32px;
+            color: #667eea;
+        }
+        .summary-card p {
+            margin: 5px 0 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .critical { color: #ff4444 !important; }
+        .high { color: #ff9800 !important; }
+        .medium { color: #2196F3 !important; }
+        
+        .content {
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        .section h2 {
+            font-size: 22px;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            color: #333;
+        }
+        .threat-item {
+            background: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .threat-item.critical {
+            border-left-color: #ff4444;
+            background: #fff5f5;
+        }
+        .threat-item.high {
+            border-left-color: #ff9800;
+            background: #fff9f0;
+        }
+        .threat-item.medium {
+            border-left-color: #2196F3;
+        }
+        .threat-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .threat-desc {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .threat-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            color: #888;
+        }
+        .threat-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .score-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .reason-tag {
+            display: inline-block;
+            background: #e0e0e0;
+            color: #555;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white !important;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background: #5568d3;
+        }
+        .footer {
+            background: #333;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🛡️ {{industry_name}} Threat Intelligence</h1>
+            <p>{{date}} | Powered by cyber-pi & Nexum</p>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="summary">
+            <div class="summary-card">
+                <h3 class="critical">{{critical_count}}</h3>
+                <p>Critical Threats</p>
+            </div>
+            <div class="summary-card">
+                <h3 class="high">{{high_count}}</h3>
+                <p>High Priority</p>
+            </div>
+            <div class="summary-card">
+                <h3 class="medium">{{medium_count}}</h3>
+                <p>Medium Priority</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{total_count}}</h3>
+                <p>Total Threats</p>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Executive Summary -->
+            <div class="section">
+                <h2>📊 Executive Summary</h2>
+                <p>{{executive_summary}}</p>
+            </div>
+            
+            <!-- Critical Threats -->
+            {% if critical_threats %}
+            <div class="section">
+                <h2>🚨 Critical Threats</h2>
+                {% for threat in critical_threats %}
+                <div class="threat-item critical">
+                    <div class="threat-title">{{threat.title}}</div>
+                    <div class="threat-desc">{{threat.description}}</div>
+                    <div class="threat-meta">
+                        <span><span class="score-badge critical">Score: {{threat.relevance_score}}</span></span>
+                        <span>📅 {{threat.published}}</span>
+                        <span>🔗 {{threat.source.name}}</span>
+                    </div>
+                    {% if threat.match_reasons %}
+                    <div style="margin-top: 10px;">
+                        {% for reason in threat.match_reasons[:3] %}
+                        <span class="reason-tag">{{reason}}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <a href="{{threat.link}}" class="button">View Details →</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- High Priority -->
+            {% if high_priority_threats %}
+            <div class="section">
+                <h2>⚠️ High Priority Threats</h2>
+                {% for threat in high_priority_threats[:5] %}
+                <div class="threat-item high">
+                    <div class="threat-title">{{threat.title}}</div>
+                    <div class="threat-meta">
+                        <span><span class="score-badge high">{{threat.relevance_score}}</span></span>
+                        <span>📅 {{threat.published}}</span>
+                    </div>
+                    <a href="{{threat.link}}" class="button">View Details →</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Vendor Alerts -->
+            {% if vendor_alerts %}
+            <div class="section">
+                <h2>🏢 Vendor Alerts</h2>
+                {% for alert in vendor_alerts[:5] %}
+                <div class="threat-item">
+                    <div class="threat-title">{{alert.vendor}}: {{alert.title}}</div>
+                    <div class="threat-meta">
+                        <span><span class="score-badge">{{alert.relevance_score}}</span></span>
+                    </div>
+                    <a href="{{alert.link}}" class="button">View Details →</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Compliance Updates -->
+            {% if compliance_updates %}
+            <div class="section">
+                <h2>📋 Compliance & Regulatory Updates</h2>
+                {% for update in compliance_updates[:5] %}
+                <div class="threat-item">
+                    <div class="threat-title">{{update.compliance_framework}}: {{update.title}}</div>
+                    <a href="{{update.link}}" class="button">View Details →</a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>cyber-pi Threat Intelligence Platform</strong></p>
+            <p>Powered by Nexum | Automated threat intelligence for your industry</p>
+            <p style="margin-top: 20px;">
+                <a href="#">Unsubscribe</a> | 
+                <a href="#">Preferences</a> | 
+                <a href="#">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

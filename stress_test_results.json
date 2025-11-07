@@ -1,0 +1,42 @@
+[
+  {
+    "test_name": "CPU Stress Test",
+    "duration": 30.202746152877808,
+    "operations_completed": 6479076,
+    "operations_per_second": 214519.43367019473,
+    "memory_peak_mb": 43046.16015625,
+    "cpu_peak_percent": 11.0,
+    "errors": 0,
+    "success": true
+  },
+  {
+    "test_name": "Memory Stress Test",
+    "duration": 39.09640121459961,
+    "operations_completed": 512,
+    "operations_per_second": 13.09583450378563,
+    "memory_peak_mb": 94198.31640625,
+    "cpu_peak_percent": 8.0,
+    "errors": 0,
+    "success": true
+  },
+  {
+    "test_name": "Concurrent Operations Test",
+    "duration": 7.692630767822266,
+    "operations_completed": 550000,
+    "operations_per_second": 71496.99713921164,
+    "memory_peak_mb": 44565.77734375,
+    "cpu_peak_percent": 80.0,
+    "errors": 0,
+    "success": true
+  },
+  {
+    "test_name": "Async I/O Stress Test",
+    "duration": 0.09581756591796875,
+    "operations_completed": 5000,
+    "operations_per_second": 52182.498606576955,
+    "memory_peak_mb": 44466.93359375,
+    "cpu_peak_percent": 12.3,
+    "errors": 0,
+    "success": true
+  }
+]

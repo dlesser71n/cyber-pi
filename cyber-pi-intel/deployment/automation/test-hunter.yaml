@@ -1,0 +1,93 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-hunter
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: hunter
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "Installing dependencies..."
+            pip install --quiet redis neo4j
+
+            cat > /tmp/hunter.py << 'PYTHON'
+            import asyncio
+            import json
+            from datetime import datetime, timezone, timedelta
+            import redis.asyncio as redis
+            from neo4j import GraphDatabase
+
+            async def hunt():
+                print("="*60)
+                print("🔍 THREAT HUNTER TEST")
+                print("="*60)
+
+                driver = GraphDatabase.driver(
+                    "bolt://neo4j.cyber-pi-intel.svc.cluster.local:7687",
+                    auth=("neo4j", "cyber-pi-neo4j-2025")
+                )
+                redis_client = await redis.from_url(
+                    "redis://:cyber-pi-redis-2025@redis.cyber-pi-intel.svc.cluster.local:6379",
+                    encoding="utf-8",
+                    decode_responses=True
+                )
+
+                # Hunt for CISA KEV
+                query = """
+                MATCH (t:CyberThreat)
+                WHERE t.source CONTAINS 'CISA KEV'
+                RETURN t.threatId as id, t.title as title, t.ingestedDate as ingested
+                ORDER BY t.ingestedDate DESC
+                LIMIT 10
+                """
+
+                with driver.session() as session:
+                    result = session.run(query)
+                    threats = [dict(r) for r in result]
+
+                print(f"\n📊 Found {len(threats)} CISA KEV threats")
+
+                # Generate alerts for new threats
+                alerts = 0
+                for threat in threats:
+                    alerted = await redis_client.get(f"test:alerted:{threat['id']}")
+                    if not alerted:
+                        # Extract CVE
+                        cve = "Unknown"
+                        if "CVE-" in threat['title']:
+                            cve = threat['title'].split("CVE-")[1].split()[0]
+                            cve = f"CVE-{cve}"
+
+                        alert = {
+                            "type": "cisa_kev",
+                            "severity": "critical",
+                            "cve": cve,
+                            "title": threat['title']
+                        }
+
+                        await redis_client.lpush("queue:alerts", json.dumps(alert))
+                        await redis_client.setex(f"test:alerted:{threat['id']}", 300, "1")
+                        alerts += 1
+                        print(f"  🚨 Alert: {cve}")
+
+                print(f"\n✅ Generated {alerts} new alerts")
+                print(f"📬 Alerts queued to: queue:alerts")
+
+                # Check queue
+                queue_len = await redis_client.llen("queue:alerts")
+                print(f"📊 Total alerts in queue: {queue_len}")
+
+                driver.close()
+                await redis_client.aclose()
+
+            asyncio.run(hunt())
+            PYTHON
+
+            python3 /tmp/hunter.py

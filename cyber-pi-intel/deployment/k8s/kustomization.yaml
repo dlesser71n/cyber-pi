@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tqakb-v4
+
+resources:
+  - namespace.yaml
+  - kafka/kafka-statefulset.yaml
+  - redis/redis-deployment.yaml
+  - neo4j/neo4j-deployment.yaml
+  - weaviate/weaviate-deployment.yaml
+  - kafka-ui/kafka-ui-deployment.yaml
+  - ingress/ingress.yaml
+
+commonLabels:
+  project: tqakb
+  version: v4
+  managed-by: kustomize
+
+configMapGenerator:
+  - name: tqakb-config
+    literals:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - NEO4J_URI=bolt://neo4j:7687
+      - WEAVIATE_URL=http://weaviate:8080
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - INGRESS_HOST=tqakb.local

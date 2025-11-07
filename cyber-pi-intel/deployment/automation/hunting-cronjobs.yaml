@@ -1,0 +1,331 @@
+---
+# ConfigMap containing all hunter scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hunter-scripts
+  namespace: cyber-pi-intel
+data:
+  zero_day_hunter.py: |
+    #!/usr/bin/env python3
+    import asyncio
+    import json
+    import os
+    from datetime import datetime, timezone
+    import redis.asyncio as redis
+    from neo4j import GraphDatabase
+
+    async def hunt():
+        print("🔍 ZERO-DAY HUNTER")
+
+        # Get credentials from environment (injected from K8s secrets)
+        neo4j_password = os.getenv('NEO4J_PASSWORD', '')
+        neo4j_host = os.getenv('NEO4J_HOST', 'neo4j.cyber-pi-intel.svc.cluster.local')
+        redis_password = os.getenv('REDIS_PASSWORD', '')
+        redis_host = os.getenv('REDIS_HOST', 'redis.cyber-pi-intel.svc.cluster.local')
+
+        driver = GraphDatabase.driver(
+            f"bolt://{neo4j_host}:7687",
+            auth=("neo4j", neo4j_password)
+        )
+        redis_client = await redis.from_url(
+            f"redis://:{redis_password}@{redis_host}:6379",
+            encoding="utf-8",
+            decode_responses=True
+        )
+
+        query = """
+        MATCH (t:CyberThreat)
+        WHERE toLower(t.title) CONTAINS 'zero-day'
+           OR toLower(t.title) CONTAINS 'actively exploited'
+        RETURN t.threatId as id, t.title as title, t.source as source
+        LIMIT 20
+        """
+
+        with driver.session() as session:
+            result = session.run(query)
+            threats = [dict(r) for r in result]
+
+        alerts = 0
+        for threat in threats:
+            alerted = await redis_client.get(f"alert:sent:{threat['id']}")
+            if not alerted:
+                alert = {
+                    "type": "zero_day",
+                    "severity": "critical",
+                    "title": threat['title'],
+                    "source": threat['source']
+                }
+                await redis_client.lpush("queue:alerts", json.dumps(alert))
+                await redis_client.setex(f"alert:sent:{threat['id']}", 86400*30, "1")
+                alerts += 1
+
+        print(f"Found {len(threats)} zero-days, {alerts} new alerts")
+        driver.close()
+        await redis_client.aclose()
+
+    asyncio.run(hunt())
+
+  apt_detector.py: |
+    #!/usr/bin/env python3
+    import asyncio
+    import json
+    import os
+    from datetime import datetime, timezone
+    import redis.asyncio as redis
+    from neo4j import GraphDatabase
+
+    async def detect():
+        print("🎯 APT DETECTOR")
+
+        # Get credentials from environment (injected from K8s secrets)
+        neo4j_password = os.getenv('NEO4J_PASSWORD', '')
+        neo4j_host = os.getenv('NEO4J_HOST', 'neo4j.cyber-pi-intel.svc.cluster.local')
+        redis_password = os.getenv('REDIS_PASSWORD', '')
+        redis_host = os.getenv('REDIS_HOST', 'redis.cyber-pi-intel.svc.cluster.local')
+
+        driver = GraphDatabase.driver(
+            f"bolt://{neo4j_host}:7687",
+            auth=("neo4j", neo4j_password)
+        )
+        redis_client = await redis.from_url(
+            f"redis://:{redis_password}@{redis_host}:6379",
+            encoding="utf-8",
+            decode_responses=True
+        )
+
+        query = """
+        MATCH (t:CyberThreat)
+        WHERE toLower(t.title) CONTAINS 'apt'
+           OR toLower(t.title) CONTAINS 'lazarus'
+        RETURN t.threatId as id, t.title as title, t.source as source
+        LIMIT 20
+        """
+
+        with driver.session() as session:
+            result = session.run(query)
+            threats = [dict(r) for r in result]
+
+        alerts = 0
+        for threat in threats:
+            analyzed = await redis_client.get(f"apt:analyzed:{threat['id']}")
+            if not analyzed:
+                alert = {
+                    "type": "apt_activity",
+                    "severity": "high",
+                    "title": threat['title'],
+                    "source": threat['source']
+                }
+                await redis_client.lpush("queue:alerts", json.dumps(alert))
+                await redis_client.setex(f"apt:analyzed:{threat['id']}", 86400*30, "1")
+                alerts += 1
+
+        print(f"Found {len(threats)} APT threats, {alerts} new alerts")
+        driver.close()
+        await redis_client.aclose()
+
+    asyncio.run(detect())
+
+  cisa_kev_monitor.py: |
+    #!/usr/bin/env python3
+    import asyncio
+    import json
+    import os
+    from datetime import datetime, timezone, timedelta
+    import redis.asyncio as redis
+    from neo4j import GraphDatabase
+
+    async def monitor():
+        print("🔒 CISA KEV MONITOR")
+
+        # Get credentials from environment (injected from K8s secrets)
+        neo4j_password = os.getenv('NEO4J_PASSWORD', '')
+        neo4j_host = os.getenv('NEO4J_HOST', 'neo4j.cyber-pi-intel.svc.cluster.local')
+        redis_password = os.getenv('REDIS_PASSWORD', '')
+        redis_host = os.getenv('REDIS_HOST', 'redis.cyber-pi-intel.svc.cluster.local')
+
+        driver = GraphDatabase.driver(
+            f"bolt://{neo4j_host}:7687",
+            auth=("neo4j", neo4j_password)
+        )
+        redis_client = await redis.from_url(
+            f"redis://:{redis_password}@{redis_host}:6379",
+            encoding="utf-8",
+            decode_responses=True
+        )
+
+        query = """
+        MATCH (t:CyberThreat)
+        WHERE t.source CONTAINS 'CISA KEV'
+        RETURN t.threatId as id, t.title as title, t.ingestedDate as ingested
+        ORDER BY t.ingestedDate DESC
+        """
+
+        with driver.session() as session:
+            result = session.run(query)
+            threats = [dict(r) for r in result]
+
+        cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+        new_kevs = [t for t in threats if t['ingested'] and t['ingested'] > cutoff]
+
+        alerts = 0
+        for threat in new_kevs:
+            alerted = await redis_client.get(f"kev:alerted:{threat['id']}")
+            if not alerted:
+                cve = "Unknown"
+                if "CVE-" in threat['title']:
+                    cve = threat['title'].split("CVE-")[1].split()[0]
+                    cve = f"CVE-{cve}"
+
+                alert = {
+                    "type": "cisa_kev",
+                    "severity": "critical",
+                    "priority": "P1",
+                    "cve": cve,
+                    "title": threat['title'],
+                    "federal_mandate": True
+                }
+                await redis_client.lpush("queue:alerts", json.dumps(alert))
+                await redis_client.setex(f"kev:alerted:{threat['id']}", 86400*90, "1")
+                alerts += 1
+
+        print(f"Total KEV: {len(threats)}, New (24h): {len(new_kevs)}, Alerts: {alerts}")
+        driver.close()
+        await redis_client.aclose()
+
+    asyncio.run(monitor())
+
+---
+# Zero-Day Hunter - Runs hourly
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: zero-day-hunter
+  namespace: cyber-pi-intel
+spec:
+  schedule: "0 * * * *"  # Every hour
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: hunter
+            image: python:3.11-slim
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                pip install --quiet redis neo4j
+                python3 /hunters/zero_day_hunter.py
+            env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: redis-password
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: neo4j-password
+            volumeMounts:
+            - name: hunters
+              mountPath: /hunters
+          volumes:
+          - name: hunters
+            configMap:
+              name: hunter-scripts
+
+---
+# APT Detector - Runs every 6 hours
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: apt-detector
+  namespace: cyber-pi-intel
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: detector
+            image: python:3.11-slim
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                pip install --quiet redis neo4j
+                python3 /hunters/apt_detector.py
+            env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: redis-password
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: neo4j-password
+            volumeMounts:
+            - name: hunters
+              mountPath: /hunters
+          volumes:
+          - name: hunters
+            configMap:
+              name: hunter-scripts
+
+---
+# CISA KEV Monitor - Runs every 15 minutes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cisa-kev-monitor
+  namespace: cyber-pi-intel
+spec:
+  schedule: "*/15 * * * *"  # Every 15 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: monitor
+            image: python:3.11-slim
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                pip install --quiet redis neo4j
+                python3 /hunters/cisa_kev_monitor.py
+            env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: redis-password
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: neo4j-password
+            volumeMounts:
+            - name: hunters
+              mountPath: /hunters
+          volumes:
+          - name: hunters
+            configMap:
+              name: hunter-scripts

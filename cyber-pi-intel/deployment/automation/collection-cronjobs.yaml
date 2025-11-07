@@ -1,0 +1,279 @@
+---
+# ConfigMap containing all collector scripts
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: collector-scripts
+  namespace: cyber-pi-intel
+data:
+  cisa_kev_collector.py: |
+    #!/usr/bin/env python3
+    """CISA KEV Collector"""
+    import asyncio
+    import json
+    import os
+    import httpx
+    from datetime import datetime, timezone
+    import hashlib
+    import redis.asyncio as redis
+
+    KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+
+    async def collect_kev():
+        print("🔒 CISA KEV COLLECTOR")
+
+        # Get credentials from environment (injected from K8s secrets)
+        redis_password = os.getenv('REDIS_PASSWORD', '')
+        redis_host = os.getenv('REDIS_HOST', 'redis.cyber-pi-intel.svc.cluster.local')
+        redis_url = f"redis://:{redis_password}@{redis_host}:6379"
+
+        redis_client = await redis.from_url(
+            redis_url,
+            encoding="utf-8",
+            decode_responses=True
+        )
+        await redis_client.ping()
+        print("✅ Connected to Redis")
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(KEV_URL, timeout=30.0)
+            data = response.json()
+
+        vulnerabilities = data.get('vulnerabilities', [])
+        print(f"📊 Found {len(vulnerabilities)} KEV entries")
+
+        queued = 0
+        for vuln in vulnerabilities:
+            cve_id = vuln.get('cveID', '')
+            if not cve_id:
+                continue
+
+            threat_id = f"threat_{hashlib.sha256(cve_id.encode()).hexdigest()[:16]}"
+            existing = await redis_client.get(f"threat:parsed:{threat_id}")
+            if existing:
+                continue
+
+            threat_data = {
+                "threatId": threat_id,
+                "title": f"CISA KEV: {cve_id} - {vuln.get('vulnerabilityName', 'Unknown')}",
+                "content": f"CVE: {cve_id}\nVendor: {vuln.get('vendorProject')}\nProduct: {vuln.get('product')}\nAction: {vuln.get('requiredAction')}",
+                "source": "CISA KEV Catalog",
+                "sourceUrl": "https://www.cisa.gov/known-exploited-vulnerabilities-catalog",
+                "industry": ["Critical Infrastructure"],
+                "severity": "critical",
+                "threatType": ["vulnerability"],
+                "cves": [cve_id],
+                "publishedDate": vuln.get('dateAdded', datetime.now(timezone.utc).isoformat()),
+                "ingestedDate": datetime.now(timezone.utc).isoformat()
+            }
+
+            await redis_client.setex(f"threat:parsed:{threat_id}", 86400 * 7, json.dumps(threat_data))
+            await redis_client.lpush("queue:weaviate", threat_id)
+            await redis_client.lpush("queue:neo4j", threat_id)
+            queued += 1
+
+        print(f"✅ Queued {queued} new KEV threats")
+        await redis_client.aclose()
+
+    if __name__ == "__main__":
+        asyncio.run(collect_kev())
+
+  rss_collector.py: |
+    #!/usr/bin/env python3
+    """RSS Feed Collector"""
+    import asyncio
+    import json
+    import os
+    import hashlib
+    from datetime import datetime, timezone
+    import feedparser
+    import redis.asyncio as redis
+
+    RSS_FEEDS = [
+        {"name": "Krebs on Security", "url": "https://krebsonsecurity.com/feed/"},
+        {"name": "The Hacker News", "url": "https://feeds.feedburner.com/TheHackersNews"},
+        {"name": "Bleeping Computer", "url": "https://www.bleepingcomputer.com/feed/"},
+    ]
+
+    async def collect_rss():
+        print("📰 RSS FEED COLLECTOR")
+
+        # Get credentials from environment (injected from K8s secrets)
+        redis_password = os.getenv('REDIS_PASSWORD', '')
+        redis_host = os.getenv('REDIS_HOST', 'redis.cyber-pi-intel.svc.cluster.local')
+        redis_url = f"redis://:{redis_password}@{redis_host}:6379"
+
+        redis_client = await redis.from_url(
+            redis_url,
+            encoding="utf-8",
+            decode_responses=True
+        )
+        await redis_client.ping()
+        print("✅ Connected to Redis")
+
+        total_new = 0
+        for feed_config in RSS_FEEDS:
+            print(f"📡 {feed_config['name']}")
+            feed = feedparser.parse(feed_config['url'])
+
+            for entry in feed.entries:
+                id_str = entry.get('title', '') + entry.get('link', '')
+                threat_id = f"threat_{hashlib.sha256(id_str.encode()).hexdigest()[:16]}"
+
+                existing = await redis_client.get(f"threat:parsed:{threat_id}")
+                if existing:
+                    continue
+
+                threat_data = {
+                    "threatId": threat_id,
+                    "title": entry.get('title', 'Unknown')[:500],
+                    "content": entry.get('summary', '')[:10000],
+                    "source": feed_config['name'],
+                    "sourceUrl": entry.get('link', ''),
+                    "industry": ["General"],
+                    "severity": "medium",
+                    "threatType": [],
+                    "cves": [],
+                    "publishedDate": datetime.now(timezone.utc).isoformat(),
+                    "ingestedDate": datetime.now(timezone.utc).isoformat()
+                }
+
+                await redis_client.setex(f"threat:parsed:{threat_id}", 86400 * 3, json.dumps(threat_data))
+                await redis_client.lpush("queue:weaviate", threat_id)
+                await redis_client.lpush("queue:neo4j", threat_id)
+                total_new += 1
+
+        print(f"✅ Collected {total_new} new RSS items")
+        await redis_client.aclose()
+
+    if __name__ == "__main__":
+        asyncio.run(collect_rss())
+
+---
+# CISA KEV Collector - Runs every 15 minutes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cisa-kev-collector
+  namespace: cyber-pi-intel
+spec:
+  schedule: "*/15 * * * *"  # Every 15 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: collector
+            image: python:3.11-slim
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                pip install --quiet httpx redis feedparser
+                python3 /scripts/cisa_kev_collector.py
+            env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: redis-password
+            volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          volumes:
+          - name: scripts
+            configMap:
+              name: collector-scripts
+
+---
+# RSS Feed Collector - Runs hourly
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rss-feed-collector
+  namespace: cyber-pi-intel
+spec:
+  schedule: "0 * * * *"  # Every hour
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+          - name: collector
+            image: python:3.11-slim
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                pip install --quiet redis feedparser
+                python3 /scripts/rss_collector.py
+            env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cyber-pi-credentials
+                  key: redis-password
+            volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+          volumes:
+          - name: scripts
+            configMap:
+              name: collector-scripts
+
+---
+# Storage Workers - Always running to process queues
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-workers
+  namespace: cyber-pi-intel
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: storage-workers
+  template:
+    metadata:
+      labels:
+        app: storage-workers
+    spec:
+      containers:
+      - name: weaviate-worker
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis weaviate-client
+            while true; do
+              python3 /worker/weaviate_worker.py 1
+              sleep 30
+            done
+        volumeMounts:
+        - name: worker-code
+          mountPath: /worker
+      - name: neo4j-worker
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis neo4j
+            while true; do
+              python3 /worker/neo4j_worker.py 1
+              sleep 30
+            done
+        volumeMounts:
+        - name: worker-code
+          mountPath: /worker
+      volumes:
+      - name: worker-code
+        configMap:
+          name: worker-code

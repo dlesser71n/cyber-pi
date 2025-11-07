@@ -1,0 +1,393 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worker-code
+  namespace: cyber-pi-intel
+data:
+  redis_hub.py: |
+    """Redis Hub - Central routing"""
+    import redis.asyncio as redis
+    import json
+    from datetime import datetime, timezone
+    
+    class RedisHub:
+        def __init__(self, redis_client):
+            self.redis = redis_client
+            self.WEAVIATE_QUEUE = "queue:weaviate"
+            self.NEO4J_QUEUE = "queue:neo4j"
+            self.STIX_EXPORT_QUEUE = "queue:stix_export"
+        
+        async def get_next_for_weaviate(self):
+            result = await self.redis.brpop(self.WEAVIATE_QUEUE, timeout=1)
+            return result[1] if result else None
+        
+        async def get_next_for_neo4j(self):
+            result = await self.redis.brpop(self.NEO4J_QUEUE, timeout=1)
+            return result[1] if result else None
+        
+        async def get_next_for_stix_export(self):
+            result = await self.redis.brpop(self.STIX_EXPORT_QUEUE, timeout=1)
+            return result[1] if result else None
+        
+        async def get_parsed_threat(self, threat_id):
+            data = await self.redis.get(f"threat:parsed:{threat_id}")
+            return json.loads(data) if data else None
+        
+        async def mark_stored(self, threat_id, locations):
+            await self.redis.setex(
+                f"threat:stored:{threat_id}",
+                86400,
+                json.dumps({
+                    "threat_id": threat_id,
+                    "stored_at": datetime.now(timezone.utc).isoformat(),
+                    "locations": locations
+                })
+            )
+
+  weaviate_worker.py: |
+    #!/usr/bin/env python3
+    import asyncio
+    import sys
+    import redis.asyncio as redis
+    import weaviate
+    import weaviate.classes.config as wvcc
+    from datetime import datetime, timezone
+    import json
+    
+    # Import redis_hub from same directory
+    sys.path.insert(0, '/app')
+    from redis_hub import RedisHub
+    
+    async def main():
+        worker_id = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+        print(f"Weaviate Worker {worker_id} starting...")
+        
+        # Connect to Redis (internal service)
+        redis_client = await redis.from_url(
+            "redis://redis.cyber-pi-intel.svc.cluster.local:6379",
+            password="cyber-pi-redis-2025",
+            encoding="utf-8",
+            decode_responses=True
+        )
+        await redis_client.ping()
+        hub = RedisHub(redis_client)
+        print(f"Worker {worker_id}: Connected to Redis")
+        
+        # Connect to Weaviate (internal service)
+        weaviate_client = weaviate.connect_to_custom(
+            http_host="weaviate.cyber-pi-intel.svc.cluster.local",
+            http_port=8080,
+            http_secure=False,
+            grpc_host="weaviate.cyber-pi-intel.svc.cluster.local",
+            grpc_port=50051,
+            grpc_secure=False
+        )
+        print(f"Worker {worker_id}: Connected to Weaviate")
+        
+        collection = weaviate_client.collections.get("CyberThreatIntelligence")
+        
+        processed = 0
+        consecutive_empty = 0
+        
+        while True:
+            threat_id = await hub.get_next_for_weaviate()
+            
+            if not threat_id:
+                consecutive_empty += 1
+                if consecutive_empty >= 5:
+                    break
+                await asyncio.sleep(0.5)
+                continue
+            
+            consecutive_empty = 0
+            threat = await hub.get_parsed_threat(threat_id)
+            
+            if threat:
+                try:
+                    collection.data.insert({
+                        "threatId": threat.get('threatId'),
+                        "title": threat.get('title', ''),
+                        "content": threat.get('content', ''),
+                        "summary": threat.get('content', '')[:500],
+                        "source": threat.get('source', ''),
+                        "sourceUrl": threat.get('sourceUrl', ''),
+                        "industry": threat.get('industry', []) if isinstance(threat.get('industry'), list) else [threat.get('industry', 'General')],
+                        "severity": threat.get('severity', 'medium'),
+                        "threatType": threat.get('threatType', []),
+                        "threatActors": threat.get('threatActors', []),
+                        "cves": threat.get('cves', []),
+                        "iocs": [],
+                        "mitreTactics": [],
+                        "mitreTechniques": [],
+                        "publishedDate": threat.get('publishedDate', datetime.now(timezone.utc).isoformat()),
+                        "ingestedDate": threat.get('ingestedDate', datetime.now(timezone.utc).isoformat()),
+                        "lastUpdated": datetime.now(timezone.utc).isoformat(),
+                        "confidence": 0.7,
+                        "verificationStatus": "unverified",
+                        "tags": threat.get('tags', []),
+                        "affectedProducts": [],
+                        "affectedVendors": [],
+                        "recommendedActions": [],
+                        "relatedThreats": [],
+                        "metadata": json.dumps({}),
+                        "stixId": "",
+                        "stixType": "",
+                        "stixVersion": "",
+                        "stixObject": ""
+                    })
+                    
+                    await hub.mark_stored(threat_id, ["weaviate"])
+                    processed += 1
+                    
+                    if processed % 100 == 0:
+                        print(f"Worker {worker_id}: Processed {processed}")
+                except Exception as e:
+                    print(f"Worker {worker_id}: Error processing {threat_id}: {e}")
+        
+        print(f"Worker {worker_id}: Complete! Processed {processed} threats")
+        
+        weaviate_client.close()
+        await redis_client.close()
+    
+    if __name__ == "__main__":
+        asyncio.run(main())
+
+  neo4j_worker.py: |
+    #!/usr/bin/env python3
+    import asyncio
+    import sys
+    import redis.asyncio as redis
+    from neo4j import GraphDatabase
+    
+    sys.path.insert(0, '/app')
+    from redis_hub import RedisHub
+    
+    async def main():
+        worker_id = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+        print(f"Neo4j Worker {worker_id} starting...")
+        
+        # Connect to Redis
+        redis_client = await redis.from_url(
+            "redis://redis.cyber-pi-intel.svc.cluster.local:6379",
+            password="cyber-pi-redis-2025",
+            encoding="utf-8",
+            decode_responses=True
+        )
+        await redis_client.ping()
+        hub = RedisHub(redis_client)
+        print(f"Worker {worker_id}: Connected to Redis")
+        
+        # Connect to Neo4j
+        neo4j_driver = GraphDatabase.driver(
+            "bolt://neo4j.cyber-pi-intel.svc.cluster.local:7687",
+            auth=("neo4j", "cyber-pi-neo4j-2025")
+        )
+        neo4j_driver.verify_connectivity()
+        print(f"Worker {worker_id}: Connected to Neo4j")
+        
+        processed = 0
+        consecutive_empty = 0
+        
+        while True:
+            threat_id = await hub.get_next_for_neo4j()
+            
+            if not threat_id:
+                consecutive_empty += 1
+                if consecutive_empty >= 5:
+                    break
+                await asyncio.sleep(0.5)
+                continue
+            
+            consecutive_empty = 0
+            threat = await hub.get_parsed_threat(threat_id)
+            
+            if threat:
+                try:
+                    with neo4j_driver.session() as session:
+                        # Create threat node
+                        session.run("""
+                            MERGE (t:CyberThreat {threatId: $threatId})
+                            SET t.title = $title,
+                                t.severity = $severity,
+                                t.publishedDate = $publishedDate,
+                                t.source = $source
+                        """, 
+                            threatId=threat['threatId'],
+                            title=threat.get('title', ''),
+                            severity=threat.get('severity', 'medium'),
+                            publishedDate=threat.get('publishedDate', ''),
+                            source=threat.get('source', '')
+                        )
+                        
+                        # Create threat actor relationships
+                        for actor in threat.get('threatActors', []):
+                            session.run("""
+                                MATCH (t:CyberThreat {threatId: $threatId})
+                                MERGE (a:ThreatActor {actorName: $actor})
+                                MERGE (t)-[:ATTRIBUTED_TO]->(a)
+                            """, threatId=threat['threatId'], actor=actor)
+                        
+                        # Create CVE relationships
+                        for cve in threat.get('cves', []):
+                            session.run("""
+                                MATCH (t:CyberThreat {threatId: $threatId})
+                                MERGE (c:CVE {cveId: $cve})
+                                MERGE (t)-[:EXPLOITS]->(c)
+                            """, threatId=threat['threatId'], cve=cve)
+                    
+                    await hub.mark_stored(threat_id, ["neo4j"])
+                    processed += 1
+                    
+                    if processed % 50 == 0:
+                        print(f"Worker {worker_id}: Processed {processed}")
+                except Exception as e:
+                    print(f"Worker {worker_id}: Error processing {threat_id}: {e}")
+        
+        print(f"Worker {worker_id}: Complete! Processed {processed} threats")
+        
+        neo4j_driver.close()
+        await redis_client.close()
+    
+    if __name__ == "__main__":
+        asyncio.run(main())
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: weaviate-worker-1
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: worker
+        image: python:3.12-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis weaviate-client
+            cd /app
+            python3 weaviate_worker.py 1
+        volumeMounts:
+        - name: worker-code
+          mountPath: /app
+      volumes:
+      - name: worker-code
+        configMap:
+          name: worker-code
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: weaviate-worker-2
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: worker
+        image: python:3.12-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis weaviate-client
+            cd /app
+            python3 weaviate_worker.py 2
+        volumeMounts:
+        - name: worker-code
+          mountPath: /app
+      volumes:
+      - name: worker-code
+        configMap:
+          name: worker-code
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: weaviate-worker-3
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: worker
+        image: python:3.12-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis weaviate-client
+            cd /app
+            python3 weaviate_worker.py 3
+        volumeMounts:
+        - name: worker-code
+          mountPath: /app
+      volumes:
+      - name: worker-code
+        configMap:
+          name: worker-code
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: neo4j-worker-1
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: worker
+        image: python:3.12-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis neo4j
+            cd /app
+            python3 neo4j_worker.py 1
+        volumeMounts:
+        - name: worker-code
+          mountPath: /app
+      volumes:
+      - name: worker-code
+        configMap:
+          name: worker-code
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: neo4j-worker-2
+  namespace: cyber-pi-intel
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: worker
+        image: python:3.12-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            pip install --quiet redis neo4j
+            cd /app
+            python3 neo4j_worker.py 2
+        volumeMounts:
+        - name: worker-code
+          mountPath: /app
+      volumes:
+      - name: worker-code
+        configMap:
+          name: worker-code

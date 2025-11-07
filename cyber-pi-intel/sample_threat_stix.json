@@ -1,0 +1,287 @@
+{
+    "type": "bundle",
+    "id": "bundle--49511280-45dc-4d78-93fd-fc3e99563dad",
+    "objects": [
+        {
+            "type": "malware",
+            "spec_version": "2.1",
+            "id": "malware--be1456de-db35-43f2-87c5-4a0dad74205a",
+            "created": "2025-10-31T17:00:00.000Z",
+            "modified": "2025-10-31T17:00:00.000Z",
+            "name": "Lockbit Ransomware Targeting Aviation Industry",
+            "description": "\n    A new campaign by the Lockbit ransomware group has been observed targeting\n    major airlines and aviation infrastructure. The attackers are exploiting\n    CVE-2024-1234 in Apache Struts to gain initial access, followed by lateral\n    movement using credential dumping techniques (MITRE T1003).\n    \n    The ransomware encrypts critical flight scheduling and passenger data systems,\n    demanding payment in cryptocurrency. Several airlines have reported disruptions\n    to their operations.\n    ",
+            "malware_types": [
+                "ransomware",
+                "malware"
+            ],
+            "is_family": true,
+            "labels": [
+                "ransomware",
+                "aviation",
+                "lockbit",
+                "critical-infrastructure"
+            ],
+            "confidence": 0
+        },
+        {
+            "type": "identity",
+            "spec_version": "2.1",
+            "id": "identity--2d673a29-22b7-4050-9337-bdde7b97eaff",
+            "created": "2025-11-02T15:36:13.784503Z",
+            "modified": "2025-11-02T15:36:13.784503Z",
+            "name": "Aviation & Airlines",
+            "description": "Threat targeting Aviation & Airlines",
+            "identity_class": "class",
+            "sectors": [
+                "aerospace"
+            ]
+        },
+        {
+            "type": "threat-actor",
+            "spec_version": "2.1",
+            "id": "threat-actor--15ddd5d9-f001-4df4-9a1a-a82fe381dd7a",
+            "created": "2025-11-02T15:36:13.784714Z",
+            "modified": "2025-11-02T15:36:13.784714Z",
+            "name": "Lockbit",
+            "threat_actor_types": [
+                "criminal-org"
+            ],
+            "sophistication": "expert",
+            "resource_level": "organization",
+            "primary_motivation": "personal-gain"
+        },
+        {
+            "type": "threat-actor",
+            "spec_version": "2.1",
+            "id": "threat-actor--585f4efd-a70b-49ae-b507-16191f3a0fa0",
+            "created": "2025-11-02T15:36:13.784918Z",
+            "modified": "2025-11-02T15:36:13.784918Z",
+            "name": "Lockbit 3.0",
+            "threat_actor_types": [
+                "criminal-org"
+            ],
+            "sophistication": "expert",
+            "resource_level": "organization",
+            "primary_motivation": "personal-gain"
+        },
+        {
+            "type": "vulnerability",
+            "spec_version": "2.1",
+            "id": "vulnerability--8b68e2c6-bd30-461c-938d-1ed7621078e6",
+            "created": "2025-11-02T15:36:13.785103Z",
+            "modified": "2025-11-02T15:36:13.785103Z",
+            "name": "CVE-2024-1234",
+            "description": "Vulnerability CVE-2024-1234",
+            "external_references": [
+                {
+                    "source_name": "cve",
+                    "url": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-1234",
+                    "external_id": "CVE-2024-1234"
+                }
+            ]
+        },
+        {
+            "type": "indicator",
+            "spec_version": "2.1",
+            "id": "indicator--bed2f3e9-a1ea-4731-ac0b-c9a114d6b4a1",
+            "created": "2025-11-02T15:36:13.78538Z",
+            "modified": "2025-11-02T15:36:13.78538Z",
+            "name": "IOC: 192.0.2.1",
+            "indicator_types": [
+                "malicious-activity"
+            ],
+            "pattern": "[ipv4-addr:value = '192.0.2.1']",
+            "pattern_type": "stix",
+            "pattern_version": "2.1",
+            "valid_from": "2025-10-31T17:00:00Z"
+        },
+        {
+            "type": "indicator",
+            "spec_version": "2.1",
+            "id": "indicator--04b95f1e-22ff-4a6e-b69e-85959067c19c",
+            "created": "2025-11-02T15:36:13.791671Z",
+            "modified": "2025-11-02T15:36:13.791671Z",
+            "name": "IOC: malicious-domain.com",
+            "indicator_types": [
+                "malicious-activity"
+            ],
+            "pattern": "[file:name = 'malicious-domain.com']",
+            "pattern_type": "stix",
+            "pattern_version": "2.1",
+            "valid_from": "2025-10-31T17:00:00Z"
+        },
+        {
+            "type": "indicator",
+            "spec_version": "2.1",
+            "id": "indicator--22b3c98d-0806-4153-945b-d8954000ee78",
+            "created": "2025-11-02T15:36:13.793407Z",
+            "modified": "2025-11-02T15:36:13.793407Z",
+            "name": "IOC: a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456",
+            "indicator_types": [
+                "malicious-activity"
+            ],
+            "pattern": "[file:hashes.'SHA-256' = 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456']",
+            "pattern_type": "stix",
+            "pattern_version": "2.1",
+            "valid_from": "2025-10-31T17:00:00Z"
+        },
+        {
+            "type": "attack-pattern",
+            "spec_version": "2.1",
+            "id": "attack-pattern--273cf7f7-a68a-46a9-88ed-47a89d8c478d",
+            "created": "2025-11-02T15:36:13.79616Z",
+            "modified": "2025-11-02T15:36:13.79616Z",
+            "name": "T1003",
+            "description": "MITRE ATT&CK technique T1003",
+            "external_references": [
+                {
+                    "source_name": "mitre-attack",
+                    "url": "https://attack.mitre.org/techniques/T1003/",
+                    "external_id": "T1003"
+                }
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "spec_version": "2.1",
+            "id": "attack-pattern--45049885-7a8c-4822-a3ab-eb30ca9dbfd8",
+            "created": "2025-11-02T15:36:13.796449Z",
+            "modified": "2025-11-02T15:36:13.796449Z",
+            "name": "T1486",
+            "description": "MITRE ATT&CK technique T1486",
+            "external_references": [
+                {
+                    "source_name": "mitre-attack",
+                    "url": "https://attack.mitre.org/techniques/T1486/",
+                    "external_id": "T1486"
+                }
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "spec_version": "2.1",
+            "id": "attack-pattern--14d61de6-68f2-4860-8f34-89bcc2138fd9",
+            "created": "2025-11-02T15:36:13.796677Z",
+            "modified": "2025-11-02T15:36:13.796677Z",
+            "name": "T1566.001",
+            "description": "MITRE ATT&CK technique T1566.001",
+            "external_references": [
+                {
+                    "source_name": "mitre-attack",
+                    "url": "https://attack.mitre.org/techniques/T1566/001/",
+                    "external_id": "T1566.001"
+                }
+            ]
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--cf4033cb-5f87-4bc8-bda6-113653f1821f",
+            "created": "2025-11-02T15:36:13.796896Z",
+            "modified": "2025-11-02T15:36:13.796896Z",
+            "relationship_type": "targets",
+            "description": "Lockbit Ransomware Targeting Aviation Industry targets Aviation & Airlines",
+            "source_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a",
+            "target_ref": "identity--2d673a29-22b7-4050-9337-bdde7b97eaff"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--b6211e97-fa7c-430f-86a6-0d103a82005b",
+            "created": "2025-11-02T15:36:13.797411Z",
+            "modified": "2025-11-02T15:36:13.797411Z",
+            "relationship_type": "uses",
+            "description": "Lockbit uses Lockbit Ransomware Targeting Aviation Industry",
+            "source_ref": "threat-actor--15ddd5d9-f001-4df4-9a1a-a82fe381dd7a",
+            "target_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--2406f970-f7ff-4b80-824a-fccd69beac70",
+            "created": "2025-11-02T15:36:13.797611Z",
+            "modified": "2025-11-02T15:36:13.797611Z",
+            "relationship_type": "uses",
+            "description": "Lockbit 3.0 uses Lockbit Ransomware Targeting Aviation Industry",
+            "source_ref": "threat-actor--585f4efd-a70b-49ae-b507-16191f3a0fa0",
+            "target_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--c9251051-a3ab-4c53-8d16-d61a1d84145b",
+            "created": "2025-11-02T15:36:13.797784Z",
+            "modified": "2025-11-02T15:36:13.797784Z",
+            "relationship_type": "exploits",
+            "description": "Lockbit Ransomware Targeting Aviation Industry exploits CVE-2024-1234",
+            "source_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a",
+            "target_ref": "vulnerability--8b68e2c6-bd30-461c-938d-1ed7621078e6"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--7e51a6c6-aaf9-4531-aa86-e5f0f79d4f28",
+            "created": "2025-11-02T15:36:13.798072Z",
+            "modified": "2025-11-02T15:36:13.798072Z",
+            "relationship_type": "indicates",
+            "description": "Indicator for Lockbit Ransomware Targeting Aviation Industry",
+            "source_ref": "indicator--bed2f3e9-a1ea-4731-ac0b-c9a114d6b4a1",
+            "target_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--6396b17b-c48e-4993-83e1-fdeba14ee7c6",
+            "created": "2025-11-02T15:36:13.798249Z",
+            "modified": "2025-11-02T15:36:13.798249Z",
+            "relationship_type": "indicates",
+            "description": "Indicator for Lockbit Ransomware Targeting Aviation Industry",
+            "source_ref": "indicator--04b95f1e-22ff-4a6e-b69e-85959067c19c",
+            "target_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--b18e3563-470d-4528-a789-8ce4e4a969b1",
+            "created": "2025-11-02T15:36:13.798412Z",
+            "modified": "2025-11-02T15:36:13.798412Z",
+            "relationship_type": "indicates",
+            "description": "Indicator for Lockbit Ransomware Targeting Aviation Industry",
+            "source_ref": "indicator--22b3c98d-0806-4153-945b-d8954000ee78",
+            "target_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--2a41d14a-87f1-441d-b602-840fe1d51cd9",
+            "created": "2025-11-02T15:36:13.798589Z",
+            "modified": "2025-11-02T15:36:13.798589Z",
+            "relationship_type": "uses",
+            "description": "Lockbit Ransomware Targeting Aviation Industry uses T1003",
+            "source_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a",
+            "target_ref": "attack-pattern--273cf7f7-a68a-46a9-88ed-47a89d8c478d"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--2f8b9427-11fb-43f9-9eb3-4d46128338c3",
+            "created": "2025-11-02T15:36:13.798751Z",
+            "modified": "2025-11-02T15:36:13.798751Z",
+            "relationship_type": "uses",
+            "description": "Lockbit Ransomware Targeting Aviation Industry uses T1486",
+            "source_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a",
+            "target_ref": "attack-pattern--45049885-7a8c-4822-a3ab-eb30ca9dbfd8"
+        },
+        {
+            "type": "relationship",
+            "spec_version": "2.1",
+            "id": "relationship--325d705c-8551-4f04-ba5e-6c16d1f0da9e",
+            "created": "2025-11-02T15:36:13.79891Z",
+            "modified": "2025-11-02T15:36:13.79891Z",
+            "relationship_type": "uses",
+            "description": "Lockbit Ransomware Targeting Aviation Industry uses T1566.001",
+            "source_ref": "malware--be1456de-db35-43f2-87c5-4a0dad74205a",
+            "target_ref": "attack-pattern--14d61de6-68f2-4860-8f34-89bcc2138fd9"
+        }
+    ]
+}

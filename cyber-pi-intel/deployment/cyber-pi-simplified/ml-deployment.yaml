@@ -1,0 +1,179 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api-ml
+  namespace: cyber-pi-intel
+  labels:
+    app: backend-api-ml
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-api-ml
+  template:
+    metadata:
+      labels:
+        app: backend-api-ml
+    spec:
+      containers:
+      - name: api
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            # Install ML dependencies
+            pip install -q fastapi uvicorn redis weaviate-client neo4j pydantic
+            pip install -q scikit-learn pandas numpy
+            
+            # Copy and run API
+            cp /app-config/main.py /app/main.py
+            cp -r /app-source /app/backend
+            cd /app
+            python main.py
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: REDIS_HOST
+          value: "redis.cyber-pi-intel.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          value: "cyber-pi-redis-2025"
+        - name: WEAVIATE_HOST
+          value: "weaviate.cyber-pi-intel.svc.cluster.local"
+        - name: NEO4J_URI
+          value: "bolt://neo4j.cyber-pi-intel.svc.cluster.local:7687"
+        - name: NEO4J_USER
+          value: "neo4j"
+        - name: NEO4J_PASSWORD
+          value: "cyber-pi-neo4j-2025"
+        volumeMounts:
+        - name: api-code
+          mountPath: /app/main.py
+          subPath: main.py
+        - name: api-source
+          mountPath: /app/backend
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: api-code
+        configMap:
+          name: backend-api-config
+      - name: api-source
+        hostPath:
+          path: /home/david/projects/cyber-pi-intel/backend
+          type: Directory
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-api-ml
+  namespace: cyber-pi-intel
+  labels:
+    app: backend-api-ml
+spec:
+  type: ClusterIP
+  selector:
+    app: backend-api-ml
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+
+---
+# Update NGINX to route /api/ml to ML service
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config-ml
+  namespace: cyber-pi-intel
+data:
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        # Backend API
+        upstream backend_api {
+            server backend-api:8000;
+        }
+        
+        # ML API
+        upstream backend_api_ml {
+            server backend-api-ml:8000;
+        }
+        
+        # Weaviate
+        upstream weaviate {
+            server weaviate:8080;
+        }
+        
+        # Neo4j
+        upstream neo4j_http {
+            server neo4j:7474;
+        }
+        
+        server {
+            listen 80;
+            
+            # ML API routes
+            location /api/ml/ {
+                proxy_pass http://backend_api_ml/ml/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+            
+            # Backend API routes
+            location /api/ {
+                proxy_pass http://backend_api/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
+            
+            # Weaviate routes
+            location /weaviate/ {
+                proxy_pass http://weaviate/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            
+            # Neo4j HTTP routes
+            location /neo4j/ {
+                proxy_pass http://neo4j_http/;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+            
+            # Health check
+            location /health {
+                return 200 "OK\n";
+                add_header Content-Type text/plain;
+            }
+        }
+    }
