@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-CVE Bulk Import - Bootstrap Neo4j Knowledge Graph
+CVE Bulk Import - Bootstrap Neo4j Knowledge Graph (LEGACY)
 Download and import all CVEs from NIST NVD to establish critical mass
+
+⚠️ DEPRECATED: This script uses NVD JSON 1.1 feeds which were retired in December 2023.
+⚠️ Use cve_bulk_import_v2.py instead (NVD API 2.0)
+
+This file is kept for reference only and will not work with current NVD infrastructure.
 """
 
 import asyncio

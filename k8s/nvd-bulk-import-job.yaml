@@ -1,0 +1,122 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nvd-bulk-import
+  namespace: cyber-pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: nvd-importer
+        image: python:3.11-slim
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "Installing dependencies..."
+            pip install --quiet aiohttp tqdm redis
+            
+            echo "Copying script..."
+            cp /scripts/cve_bulk_import_v2.py /tmp/
+            
+            echo "Starting NVD bulk import..."
+            cd /tmp
+            python3 cve_bulk_import_v2.py
+            
+            echo "Import complete! Uploading to Redis..."
+            python3 /scripts/upload_to_redis.py
+        volumeMounts:
+        - name: scripts
+          mountPath: /scripts
+        - name: data
+          mountPath: /tmp/data
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: REDIS_HOST
+          value: "redis.cyber-pi.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-secret
+              key: password
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+      volumes:
+      - name: scripts
+        configMap:
+          name: nvd-import-scripts
+      - name: data
+        emptyDir:
+          sizeLimit: 10Gi
+      restartPolicy: Never
+  backoffLimit: 2
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvd-import-scripts
+  namespace: cyber-pi
+data:
+  cve_bulk_import_v2.py: |
+    # Full script content would go here
+    # For now, mount from host or build into container image
+  
+  upload_to_redis.py: |
+    #!/usr/bin/env python3
+    import json
+    import redis
+    import os
+    from pathlib import Path
+    
+    print("Uploading CVEs to Redis...")
+    
+    r = redis.Redis(
+        host=os.getenv('REDIS_HOST', 'redis.cyber-pi.svc.cluster.local'),
+        port=int(os.getenv('REDIS_PORT', 6379)),
+        password=os.getenv('REDIS_PASSWORD', ''),
+        decode_responses=True
+    )
+    
+    r.ping()
+    print("✅ Connected to Redis")
+    
+    # Load processed CVEs
+    data_file = Path('/tmp/data/cve_import/all_cves_neo4j.json')
+    if not data_file.exists():
+        print("❌ No data file found!")
+        exit(1)
+    
+    with open(data_file) as f:
+        cves = json.load(f)
+    
+    print(f"📊 Uploading {len(cves):,} CVEs to Redis...")
+    
+    uploaded = 0
+    for cve in cves:
+        cve_id = cve.get('cve_id')
+        if cve_id:
+            key = f"nvd:cve:{cve_id}"
+            r.hset(key, mapping={
+                'cve_id': cve_id,
+                'description': cve.get('description', ''),
+                'published': cve.get('published', ''),
+                'cvss_v3_score': str(cve.get('cvss_v3_score', '')),
+                'cvss_v3_severity': cve.get('cvss_v3_severity', ''),
+                'affected_vendors': ','.join(cve.get('affected_vendors', [])),
+                'cwes': ','.join(cve.get('cwes', [])),
+                'source': 'nvd_bulk_import'
+            })
+            uploaded += 1
+            
+            if uploaded % 10000 == 0:
+                print(f"  Progress: {uploaded:,}/{len(cves):,}")
+    
+    print(f"✅ Uploaded {uploaded:,} CVEs to Redis")
+    r.close()

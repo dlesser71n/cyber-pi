@@ -9,7 +9,7 @@ from fastapi import Depends, HTTPException, status, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 import structlog
 import hashlib
 import hmac
@@ -57,7 +57,8 @@ class UserCreate(BaseModel):
     email: str = Field(..., pattern=r'^[\w\.-]+@[\w\.-]+\.\w+$')
     password: str = Field(..., min_length=8)
     
-    @validator('password')
+    @field_validator('password')
+    @classmethod
     def validate_password(cls, v):
         """Ensure password complexity"""
         if not re.search(r'[A-Z]', v):
