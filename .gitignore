@@ -27,7 +27,13 @@ data/
 
 # Secrets
 *.env
-.env.*
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+!.env.example
 secrets/
 *.key
 *.pem

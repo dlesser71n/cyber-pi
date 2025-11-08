@@ -89,7 +89,13 @@ cyber-pi/
 
 ### **Environment Variables**
 
-Edit `.env` file to customize:
+Copy `.env.example` to `.env` and customize:
+
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` file to customize:
 
 ```bash
 # Database connections (using existing TQAKB infrastructure)
