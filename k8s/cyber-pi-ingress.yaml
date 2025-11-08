@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: neo4j-ingress
-  namespace: cyber-pi-intel
+  namespace: cyber-pi
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
@@ -26,7 +26,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: weaviate-ingress
-  namespace: cyber-pi-intel
+  namespace: cyber-pi
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
