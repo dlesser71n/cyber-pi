@@ -185,8 +185,23 @@ Disable performance tracking:
 | `performance.trackOperationTimes` | boolean | true | Track operation durations |
 | `development.mode` | string | "production" | Development mode (debug/production) |
 
+## System Context (NEW!)
+
+**File:** `SYSTEM_CONTEXT.md` (symlink to `~/.claude/CLAUDE.md`)
+
+This file provides persistent system context shared between terminal Claude Code sessions and Windsurf/Cascade:
+
+- **Current Projects**: Active project details, status, GitHub links
+- **System Configuration**: MicroK8s, services, resource status  
+- **Code Patterns**: Monitoring, async, testing, documentation standards
+- **Critical Preferences**: NO DOCKER, use MicroK8s, NGINX Ingress only, uv pip
+- **Development Tools**: Python 3.11, GPU setup, toolchain preferences
+
+Cascade can reference this file for context about your system and coding standards.
+
 ---
 
 **Created:** November 3, 2025  
-**For:** Cascade 3-Level Memory System  
+**Updated:** November 8, 2025  
+**For:** Cascade 3-Level Memory System + System Context  
 **Status:** Production-Ready with Debug Support
